@@ -1,12 +1,17 @@
 import { describe, expect, it, beforeAll, afterAll } from 'vitest'
 import { Test } from '@nestjs/testing'
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
-import { AppModule } from '../../src/app.module.js'
 
 describe('GET /ping (e2e)', () => {
   let app: NestFastifyApplication
 
   beforeAll(async () => {
+    process.env['NODE_ENV'] = 'test'
+    process.env['DATABASE_URL'] = 'postgresql://mall:mall@localhost:5432/mall?schema=public'
+    process.env['REDIS_URL'] = 'redis://localhost:6379/0'
+    process.env['LOG_LEVEL'] = 'error'
+
+    const { AppModule } = await import('../../src/app.module.js')
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile()
     app = moduleRef.createNestApplication<NestFastifyApplication>(new FastifyAdapter())
     await app.init()
