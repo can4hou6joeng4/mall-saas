@@ -1,14 +1,16 @@
 import { type MiddlewareConsumer, Module, type NestModule } from '@nestjs/common'
-import { TenantMiddleware } from './tenant.middleware.js'
+import { AuthModule } from '../../modules/auth/auth.module.js'
+import { AuthMiddleware } from './auth.middleware.js'
 
 @Module({
-  providers: [TenantMiddleware],
-  exports: [TenantMiddleware],
+  imports: [AuthModule],
+  providers: [AuthMiddleware],
+  exports: [AuthMiddleware],
 })
 export class TenantModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     consumer
-      .apply(TenantMiddleware)
+      .apply(AuthMiddleware)
       .exclude('healthz', 'readyz', 'docs', 'docs/(.*)', 'auth/(.*)')
       .forRoutes('*')
   }

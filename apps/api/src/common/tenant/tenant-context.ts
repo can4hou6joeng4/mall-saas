@@ -1,16 +1,19 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
 import type { TenantId } from '@mall/shared'
 
-export interface TenantContext {
+export interface RequestContext {
   readonly tenantId: TenantId
+  readonly userId: number
+  readonly email: string
+  readonly role: string
 }
 
-export const tenantStorage = new AsyncLocalStorage<TenantContext>()
+export const requestContextStorage = new AsyncLocalStorage<RequestContext>()
 
-export function getCurrentTenantContext(): TenantContext {
-  const ctx = tenantStorage.getStore()
+export function getCurrentRequestContext(): RequestContext {
+  const ctx = requestContextStorage.getStore()
   if (!ctx) {
-    throw new Error('TenantContext is not active for this request')
+    throw new Error('RequestContext is not active for this request')
   }
   return ctx
 }
