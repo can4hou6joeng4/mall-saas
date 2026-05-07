@@ -15,6 +15,7 @@ model Tenant {
   products   Product[]
   users      User[]
   orders     Order[]
+  payments   Payment[]
 }
 
 model User {
@@ -43,6 +44,7 @@ model Order {
   tenant     Tenant      @relation(fields: [tenantId], references: [id])
   user       User        @relation(fields: [userId], references: [id])
   items      OrderItem[]
+  payments   Payment[]
 
   @@index([tenantId])
   @@index([tenantId, status])
@@ -61,6 +63,24 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+}
+
+model Payment {
+  id           Int      @id @default(autoincrement())
+  tenantId     Int
+  orderId      Int
+  providerName String
+  providerRef  String
+  amountCents  Int
+  status       String   @default("pending")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  order        Order    @relation(fields: [orderId], references: [id])
+
+  @@unique([providerName, providerRef])
+  @@index([tenantId])
+  @@index([orderId])
 }
 
 model Note {
