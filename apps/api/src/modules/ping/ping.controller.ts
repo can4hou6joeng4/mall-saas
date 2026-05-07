@@ -1,14 +1,11 @@
-import { Controller, Get, Headers } from '@nestjs/common'
-import { isValidTenantId } from '@mall/shared'
+import { Controller, Get } from '@nestjs/common'
+import type { TenantId } from '@mall/shared'
+import { CurrentTenant } from '../../common/tenant/index.js'
 
 @Controller('ping')
 export class PingController {
   @Get()
-  ping(@Headers('x-tenant-id') tenantHeader?: string): { ok: true; tenantId: number } {
-    const tenantId = Number(tenantHeader)
-    if (!isValidTenantId(tenantId)) {
-      return { ok: true, tenantId: 0 }
-    }
+  ping(@CurrentTenant() tenantId: TenantId): { ok: true; tenantId: TenantId } {
     return { ok: true, tenantId }
   }
 }

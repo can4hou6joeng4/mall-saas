@@ -22,7 +22,7 @@ describe('GET /ping (e2e)', () => {
     await app.close()
   })
 
-  it('returns { ok: true } and a tenantId echo', async () => {
+  it('echoes the tenantId provided via header', async () => {
     const res = await app.inject({
       method: 'GET',
       url: '/ping',
@@ -30,5 +30,25 @@ describe('GET /ping (e2e)', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual({ ok: true, tenantId: 7 })
+  })
+
+  it('returns 401 when x-tenant-id is missing', async () => {
+    const res = await app.inject({ method: 'GET', url: '/ping' })
+    expect(res.statusCode).toBe(401)
+  })
+
+  it('returns 401 when x-tenant-id is invalid', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/ping',
+      headers: { 'x-tenant-id': 'not-a-number' },
+    })
+    expect(res.statusCode).toBe(401)
+  })
+
+  it('healthz remains accessible without x-tenant-id', async () => {
+    const res = await app.inject({ method: 'GET', url: '/healthz' })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ status: 'ok' })
   })
 })
