@@ -8,6 +8,7 @@ import { ExceptionsModule } from './common/exceptions/exceptions.module.js'
 import { AuthModule } from './modules/auth/auth.module.js'
 import { PingModule } from './modules/ping/ping.module.js'
 import { ProductModule } from './modules/product/product.module.js'
+import { OrderModule } from './modules/order/order.module.js'
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ProductModule } from './modules/product/product.module.js'
     AuthModule,
     PingModule,
     ProductModule,
+    OrderModule,
   ],
 })
 export class AppModule {}
