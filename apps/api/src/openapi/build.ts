@@ -32,5 +32,5 @@ export function buildOpenApiDocument(): BuiltOpenApiDocument {
       { name: 'payment', description: 'Tenant 支付 + Provider Webhook' },
       { name: 'admin', description: 'Platform 超管入口' },
     ],
-  }) as BuiltOpenApiDocument
+  }) as unknown as BuiltOpenApiDocument
 }

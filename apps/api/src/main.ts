@@ -2,10 +2,11 @@ import 'reflect-metadata'
 import { randomUUID } from 'node:crypto'
 import { NestFactory } from '@nestjs/core'
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import { type OpenAPIObject, SwaggerModule } from '@nestjs/swagger'
 import { Logger } from 'nestjs-pino'
 import { AppModule } from './app.module.js'
 import { registerFastifyPlugins } from './bootstrap/fastify-plugins.js'
+import { buildOpenApiDocument } from './openapi/build.js'
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -20,11 +21,7 @@ async function bootstrap(): Promise<void> {
   app.useLogger(app.get(Logger))
   await registerFastifyPlugins(app)
 
-  const swagger = new DocumentBuilder()
-    .setTitle('Mall API')
-    .setVersion('0.0.0')
-    .build()
-  const document = SwaggerModule.createDocument(app, swagger)
+  const document = buildOpenApiDocument() as unknown as OpenAPIObject
   SwaggerModule.setup('docs', app, document)
 
   const port = Number(process.env.PORT ?? 3000)
