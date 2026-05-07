@@ -9,9 +9,12 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common'
 import type { TenantId } from '@mall/shared'
 import { CurrentTenant } from '../../common/tenant/index.js'
+import { Roles } from '../../common/auth/roles.decorator.js'
+import { RolesGuard } from '../../common/auth/roles.guard.js'
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js'
 import {
   type CreateProductDto,
@@ -24,10 +27,12 @@ import {
 import { ProductService } from './product.service.js'
 
 @Controller('products')
+@UseGuards(RolesGuard)
 export class ProductController {
   constructor(private readonly products: ProductService) {}
 
   @Post()
+  @Roles('admin')
   create(
     @CurrentTenant() tenantId: TenantId,
     @Body(new ZodValidationPipe(createProductSchema)) dto: CreateProductDto,
@@ -49,6 +54,7 @@ export class ProductController {
   }
 
   @Put(':id')
+  @Roles('admin')
   update(
     @CurrentTenant() tenantId: TenantId,
     @Param('id', ParseIntPipe) id: number,
@@ -58,6 +64,7 @@ export class ProductController {
   }
 
   @Delete(':id')
+  @Roles('admin')
   @HttpCode(204)
   async remove(@CurrentTenant() tenantId: TenantId, @Param('id', ParseIntPipe) id: number) {
     await this.products.remove(tenantId, id)

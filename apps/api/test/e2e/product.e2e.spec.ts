@@ -13,6 +13,7 @@ describe('Products API (e2e, tenant-isolated)', () => {
   let owner: PrismaClient
   let token1: string
   let token2: string
+  let userToken1: string
 
   beforeAll(async () => {
     process.env['NODE_ENV'] = 'test'
@@ -38,11 +39,19 @@ describe('Products API (e2e, tenant-isolated)', () => {
       tenantId: 1,
       email: 'admin@t1.dev',
       password: 'p@ssw0rd!',
+      role: 'admin',
     })
     token2 = await registerAndLogin(app, {
       tenantId: 2,
       email: 'admin@t2.dev',
       password: 'p@ssw0rd!',
+      role: 'admin',
+    })
+    userToken1 = await registerAndLogin(app, {
+      tenantId: 1,
+      email: 'user@t1.dev',
+      password: 'p@ssw0rd!',
+      role: 'user',
     })
   })
 
@@ -147,5 +156,26 @@ describe('Products API (e2e, tenant-isolated)', () => {
       headers: bearer(token1),
     })
     expect(res.statusCode).toBe(204)
+  })
+
+  it('user role can list products (no role required for GET)', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/products',
+      headers: bearer(userToken1),
+    })
+    expect(res.statusCode).toBe(200)
+  })
+
+  it('user role is forbidden from creating products (403)', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/products',
+      headers: bearer(userToken1),
+      payload: { name: 'Forbidden', priceCents: 1 },
+    })
+    expect(res.statusCode).toBe(403)
+    const body = res.json() as Record<string, unknown>
+    expect(body['code']).toBe('FORBIDDEN')
   })
 })

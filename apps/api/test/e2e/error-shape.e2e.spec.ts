@@ -36,6 +36,7 @@ describe('Global error response shape (e2e)', () => {
       tenantId: 1,
       email: 'errors@t1.dev',
       password: 'p@ssw0rd!',
+      role: 'admin',
     })
   })
 
