@@ -5,6 +5,7 @@ import { PrismaModule } from './common/prisma/prisma.module.js'
 import { HealthModule } from './common/health/health.module.js'
 import { TenantModule } from './common/tenant/tenant.module.js'
 import { ExceptionsModule } from './common/exceptions/exceptions.module.js'
+import { AuthModule } from './modules/auth/auth.module.js'
 import { PingModule } from './modules/ping/ping.module.js'
 import { ProductModule } from './modules/product/product.module.js'
 
@@ -16,6 +17,7 @@ import { ProductModule } from './modules/product/product.module.js'
     HealthModule,
     TenantModule,
     ExceptionsModule,
+    AuthModule,
     PingModule,
     ProductModule,
   ],

@@ -17,6 +17,8 @@ describe('Products API (e2e, tenant-isolated)', () => {
     process.env['DATABASE_APP_URL'] = APP_URL
     process.env['REDIS_URL'] = 'redis://localhost:6379/0'
     process.env['LOG_LEVEL'] = 'error'
+    process.env['JWT_SECRET'] = 'a'.repeat(64)
+    process.env['JWT_TTL_SECONDS'] = '3600'
 
     owner = new PrismaClient({ adapter: new PrismaPg({ connectionString: SUPERUSER_URL }) })
     await owner.product.deleteMany({})

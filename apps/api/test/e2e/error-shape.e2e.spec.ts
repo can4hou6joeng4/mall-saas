@@ -11,6 +11,8 @@ describe('Global error response shape (e2e)', () => {
     process.env['DATABASE_APP_URL'] = 'postgresql://mall_app:mall_app@localhost:5432/mall?schema=public'
     process.env['REDIS_URL'] = 'redis://localhost:6379/0'
     process.env['LOG_LEVEL'] = 'error'
+    process.env['JWT_SECRET'] = 'a'.repeat(64)
+    process.env['JWT_TTL_SECONDS'] = '3600'
 
     const { AppModule } = await import('../../src/app.module.js')
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile()

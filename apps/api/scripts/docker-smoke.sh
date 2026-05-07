@@ -29,6 +29,8 @@ docker run -d \
   -e DATABASE_URL="postgresql://mall:mall@host.docker.internal:5432/mall?schema=public" \
   -e DATABASE_APP_URL="postgresql://mall_app:mall_app@host.docker.internal:5432/mall?schema=public" \
   -e REDIS_URL="redis://host.docker.internal:6379/0" \
+  -e JWT_SECRET="${JWT_SECRET:-smoke-secret-must-be-at-least-thirty-two-chars}" \
+  -e JWT_TTL_SECONDS="${JWT_TTL_SECONDS:-3600}" \
   -e NODE_ENV=production \
   -e LOG_LEVEL=info \
   -p "${HOST_PORT}:3000" \

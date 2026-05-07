@@ -9,6 +9,7 @@ describe('envSchema', () => {
     DATABASE_URL: 'postgresql://mall:mall@localhost:5432/mall?schema=public',
     DATABASE_APP_URL: 'postgresql://mall_app:mall_app@localhost:5432/mall?schema=public',
     REDIS_URL: 'redis://localhost:6379/0',
+    JWT_SECRET: 'a'.repeat(64),
   }
 
   it('parses a fully valid env', () => {
