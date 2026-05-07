@@ -5,6 +5,7 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { Logger } from 'nestjs-pino'
 import { AppModule } from './app.module.js'
+import { registerFastifyPlugins } from './bootstrap/fastify-plugins.js'
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -17,6 +18,7 @@ async function bootstrap(): Promise<void> {
     { bufferLogs: true },
   )
   app.useLogger(app.get(Logger))
+  await registerFastifyPlugins(app)
 
   const swagger = new DocumentBuilder()
     .setTitle('Mall API')

@@ -98,6 +98,22 @@ export class AllExceptionsFilter implements ExceptionFilter {
       return
     }
 
+    // Fastify 插件（如 @fastify/rate-limit）抛出的错误带 statusCode；这里透传，避免被吞为 500
+    if (
+      exception !== null &&
+      typeof exception === 'object' &&
+      'statusCode' in exception &&
+      typeof (exception as { statusCode: unknown }).statusCode === 'number'
+    ) {
+      const status = (exception as { statusCode: number }).statusCode
+      const message =
+        exception instanceof Error ? exception.message : 'request rejected'
+      const body: ErrorBody = { code: statusToCode(status), message, requestId }
+      this.logger.warn({ requestId, status, message })
+      sendJson(reply, status, body)
+      return
+    }
+
     const message = exception instanceof Error ? exception.message : 'unexpected error'
     this.logger.error({ requestId, exception }, message)
     sendJson(reply, HttpStatus.INTERNAL_SERVER_ERROR, {
