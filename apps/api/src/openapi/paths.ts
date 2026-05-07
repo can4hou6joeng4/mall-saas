@@ -1,0 +1,433 @@
+import './extend-zod.js'
+import { z } from 'zod'
+import { bearerAuth, registry, schemaRefs } from './registry.js'
+import {
+  loginSchema,
+  registerSchema,
+} from '../modules/auth/auth.dto.js'
+import {
+  createProductSchema,
+  listProductsQuerySchema,
+  updateProductSchema,
+} from '../modules/product/product.dto.js'
+import {
+  createOrderSchema,
+  listOrdersQuerySchema,
+} from '../modules/order/order.dto.js'
+import { payOrderSchema } from '../modules/payment/payment.dto.js'
+import {
+  adminLoginSchema,
+  createTenantSchema,
+  listOrdersAdminQuerySchema,
+  listPaymentsAdminQuerySchema,
+  updateTenantSchema,
+} from '../modules/admin/admin.dto.js'
+
+const tenantSecurity = [{ [bearerAuth.name]: [] }]
+const platformSecurity = [{ [bearerAuth.name]: [] }]
+
+const errorResponses = {
+  '400': {
+    description: 'Bad request',
+    content: { 'application/json': { schema: schemaRefs.errorResponse } },
+  },
+  '401': {
+    description: 'Unauthorized',
+    content: { 'application/json': { schema: schemaRefs.errorResponse } },
+  },
+  '403': {
+    description: 'Forbidden',
+    content: { 'application/json': { schema: schemaRefs.errorResponse } },
+  },
+  '404': {
+    description: 'Not found',
+    content: { 'application/json': { schema: schemaRefs.errorResponse } },
+  },
+  '409': {
+    description: 'Conflict',
+    content: { 'application/json': { schema: schemaRefs.errorResponse } },
+  },
+}
+
+// Health
+registry.registerPath({
+  method: 'get',
+  path: '/healthz',
+  tags: ['health'],
+  responses: {
+    '200': {
+      description: 'Liveness',
+      content: { 'application/json': { schema: z.object({ status: z.literal('ok') }) } },
+    },
+  },
+})
+registry.registerPath({
+  method: 'get',
+  path: '/readyz',
+  tags: ['health'],
+  responses: {
+    '200': {
+      description: 'Readiness',
+      content: {
+        'application/json': {
+          schema: z.object({
+            status: z.enum(['ok', 'fail']),
+            checks: z.object({
+              db: z.enum(['ok', 'fail']),
+              redis: z.enum(['ok', 'fail']),
+            }),
+          }),
+        },
+      },
+    },
+  },
+})
+registry.registerPath({
+  method: 'get',
+  path: '/metrics',
+  tags: ['observability'],
+  responses: {
+    '200': {
+      description: 'Prometheus metrics text',
+      content: { 'text/plain': { schema: z.string() } },
+    },
+  },
+})
+
+// Auth
+registry.registerPath({
+  method: 'post',
+  path: '/auth/register',
+  tags: ['auth'],
+  request: { body: { content: { 'application/json': { schema: registerSchema } } } },
+  responses: {
+    '201': {
+      description: 'New user registered',
+      content: { 'application/json': { schema: schemaRefs.authResult } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'post',
+  path: '/auth/login',
+  tags: ['auth'],
+  request: { body: { content: { 'application/json': { schema: loginSchema } } } },
+  responses: {
+    '200': {
+      description: 'Tenant access token',
+      content: { 'application/json': { schema: schemaRefs.authResult } },
+    },
+    ...errorResponses,
+  },
+})
+
+// Products
+registry.registerPath({
+  method: 'get',
+  path: '/products',
+  tags: ['product'],
+  security: tenantSecurity,
+  request: { query: listProductsQuerySchema },
+  responses: {
+    '200': {
+      description: 'Product list (tenant-scoped)',
+      content: { 'application/json': { schema: schemaRefs.productList } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'post',
+  path: '/products',
+  tags: ['product'],
+  security: tenantSecurity,
+  request: { body: { content: { 'application/json': { schema: createProductSchema } } } },
+  responses: {
+    '201': {
+      description: 'Product created',
+      content: { 'application/json': { schema: schemaRefs.product } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'get',
+  path: '/products/{id}',
+  tags: ['product'],
+  security: tenantSecurity,
+  request: { params: z.object({ id: z.coerce.number().int().positive() }) },
+  responses: {
+    '200': {
+      description: 'Product detail',
+      content: { 'application/json': { schema: schemaRefs.product } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'put',
+  path: '/products/{id}',
+  tags: ['product'],
+  security: tenantSecurity,
+  request: {
+    params: z.object({ id: z.coerce.number().int().positive() }),
+    body: { content: { 'application/json': { schema: updateProductSchema } } },
+  },
+  responses: {
+    '200': {
+      description: 'Product updated',
+      content: { 'application/json': { schema: schemaRefs.product } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'delete',
+  path: '/products/{id}',
+  tags: ['product'],
+  security: tenantSecurity,
+  request: { params: z.object({ id: z.coerce.number().int().positive() }) },
+  responses: {
+    '204': { description: 'Product deleted' },
+    ...errorResponses,
+  },
+})
+
+// Orders
+registry.registerPath({
+  method: 'post',
+  path: '/orders',
+  tags: ['order'],
+  security: tenantSecurity,
+  request: { body: { content: { 'application/json': { schema: createOrderSchema } } } },
+  responses: {
+    '201': {
+      description: 'Order created',
+      content: { 'application/json': { schema: schemaRefs.order } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'get',
+  path: '/orders',
+  tags: ['order'],
+  security: tenantSecurity,
+  request: { query: listOrdersQuerySchema },
+  responses: {
+    '200': {
+      description: 'Order list',
+      content: {
+        'application/json': {
+          schema: z.object({
+            items: z.array(schemaRefs.order),
+            total: z.number().int(),
+            page: z.number().int(),
+            pageSize: z.number().int(),
+          }),
+        },
+      },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'get',
+  path: '/orders/{id}',
+  tags: ['order'],
+  security: tenantSecurity,
+  request: { params: z.object({ id: z.coerce.number().int().positive() }) },
+  responses: {
+    '200': {
+      description: 'Order detail',
+      content: { 'application/json': { schema: schemaRefs.order } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'post',
+  path: '/orders/{id}/cancel',
+  tags: ['order'],
+  security: tenantSecurity,
+  request: { params: z.object({ id: z.coerce.number().int().positive() }) },
+  responses: {
+    '200': {
+      description: 'Order cancelled',
+      content: { 'application/json': { schema: schemaRefs.order } },
+    },
+    ...errorResponses,
+  },
+})
+
+// Payments
+registry.registerPath({
+  method: 'post',
+  path: '/orders/{id}/pay',
+  tags: ['payment'],
+  security: tenantSecurity,
+  request: {
+    params: z.object({ id: z.coerce.number().int().positive() }),
+    body: { content: { 'application/json': { schema: payOrderSchema } } },
+  },
+  responses: {
+    '200': {
+      description: 'Payment record',
+      content: { 'application/json': { schema: schemaRefs.payment } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'post',
+  path: '/webhooks/payments/{provider}',
+  tags: ['payment'],
+  request: {
+    params: z.object({ provider: z.string() }),
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            providerRef: z.string(),
+            status: z.enum(['succeeded', 'failed']),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    '200': {
+      description: 'Acknowledged',
+      content: {
+        'application/json': { schema: z.object({ acknowledged: z.literal(true) }) },
+      },
+    },
+    ...errorResponses,
+  },
+})
+
+// Admin
+registry.registerPath({
+  method: 'post',
+  path: '/admin/auth/login',
+  tags: ['admin'],
+  request: { body: { content: { 'application/json': { schema: adminLoginSchema } } } },
+  responses: {
+    '200': {
+      description: 'Platform access token',
+      content: {
+        'application/json': {
+          schema: z.object({
+            accessToken: z.string(),
+            admin: z.object({ id: z.number().int(), email: z.string().email() }),
+          }),
+        },
+      },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'get',
+  path: '/admin/tenants',
+  tags: ['admin'],
+  security: platformSecurity,
+  responses: {
+    '200': {
+      description: 'Tenants',
+      content: { 'application/json': { schema: z.array(schemaRefs.tenant) } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'post',
+  path: '/admin/tenants',
+  tags: ['admin'],
+  security: platformSecurity,
+  request: { body: { content: { 'application/json': { schema: createTenantSchema } } } },
+  responses: {
+    '201': {
+      description: 'Tenant created',
+      content: { 'application/json': { schema: schemaRefs.tenant } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'patch',
+  path: '/admin/tenants/{id}',
+  tags: ['admin'],
+  security: platformSecurity,
+  request: {
+    params: z.object({ id: z.coerce.number().int().positive() }),
+    body: { content: { 'application/json': { schema: updateTenantSchema } } },
+  },
+  responses: {
+    '200': {
+      description: 'Tenant renamed',
+      content: { 'application/json': { schema: schemaRefs.tenant } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'delete',
+  path: '/admin/tenants/{id}',
+  tags: ['admin'],
+  security: platformSecurity,
+  request: { params: z.object({ id: z.coerce.number().int().positive() }) },
+  responses: {
+    '204': { description: 'Tenant deleted' },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'get',
+  path: '/admin/orders',
+  tags: ['admin'],
+  security: platformSecurity,
+  request: { query: listOrdersAdminQuerySchema },
+  responses: {
+    '200': {
+      description: 'Cross-tenant order list',
+      content: {
+        'application/json': {
+          schema: z.object({
+            items: z.array(schemaRefs.order),
+            total: z.number().int(),
+            page: z.number().int(),
+            pageSize: z.number().int(),
+          }),
+        },
+      },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'get',
+  path: '/admin/payments',
+  tags: ['admin'],
+  security: platformSecurity,
+  request: { query: listPaymentsAdminQuerySchema },
+  responses: {
+    '200': {
+      description: 'Cross-tenant payment list',
+      content: {
+        'application/json': {
+          schema: z.object({
+            items: z.array(schemaRefs.payment),
+            total: z.number().int(),
+            page: z.number().int(),
+            pageSize: z.number().int(),
+          }),
+        },
+      },
+    },
+    ...errorResponses,
+  },
+})
+
+export {}
