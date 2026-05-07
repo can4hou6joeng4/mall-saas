@@ -16,6 +16,7 @@ export class TenantModule implements NestModule {
         'readyz',
         'docs',
         'docs/(.*)',
+        'metrics',
         'auth/(.*)',
         'webhooks/(.*)',
         'admin/(.*)',

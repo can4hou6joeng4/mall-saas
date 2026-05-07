@@ -41,10 +41,18 @@ describe('Security plugins (e2e)', () => {
     expect(res.headers['strict-transport-security']).toBeDefined()
   })
 
+  it('/metrics endpoint exposes prometheus text and counts requests', async () => {
+    const res = await app.inject({ method: 'GET', url: '/metrics' })
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['content-type']).toMatch(/text\/plain/)
+    expect(res.body).toContain('http_requests_total')
+    expect(res.body).toContain('http_request_duration_seconds')
+  })
+
   it('rate-limit returns 429 once max is exceeded', async () => {
-    // healthz 已经消耗 1 次配额；剩 2 次。再发 4 次中至少最后一次 429
+    // 之前的 healthz 与 metrics 已经消耗了配额，再发若干次必然命中 429
     const codes: number[] = []
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 6; i++) {
       const r = await app.inject({ method: 'GET', url: '/healthz' })
       codes.push(r.statusCode)
     }
