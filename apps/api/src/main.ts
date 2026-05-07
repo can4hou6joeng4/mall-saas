@@ -1,4 +1,6 @@
 import 'reflect-metadata'
+// 必须早于任何 DTO 的 zod schema 求值，否则 `.openapi()` 元数据方法不会附加到已创建的 schema
+import './openapi/extend-zod.js'
 import { randomUUID } from 'node:crypto'
 import { NestFactory } from '@nestjs/core'
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify'
