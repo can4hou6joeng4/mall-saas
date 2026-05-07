@@ -13,6 +13,21 @@ model Tenant {
   notes      Note[]
   categories Category[]
   products   Product[]
+  users      User[]
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  tenantId     Int
+  email        String
+  passwordHash String
+  role         String   @default("user")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
 }
 
 model Note {
