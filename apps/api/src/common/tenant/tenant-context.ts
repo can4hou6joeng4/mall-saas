@@ -6,6 +6,7 @@ export interface RequestContext {
   readonly userId: number
   readonly email: string
   readonly role: string
+  readonly traceId?: string
 }
 
 export const requestContextStorage = new AsyncLocalStorage<RequestContext>()
@@ -16,4 +17,8 @@ export function getCurrentRequestContext(): RequestContext {
     throw new Error('RequestContext is not active for this request')
   }
   return ctx
+}
+
+export function tryGetCurrentRequestContext(): RequestContext | undefined {
+  return requestContextStorage.getStore()
 }

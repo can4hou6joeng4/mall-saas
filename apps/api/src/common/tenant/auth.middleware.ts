@@ -41,14 +41,26 @@ export class AuthMiddleware implements NestMiddleware {
       throw new UnauthorizedException('invalid tenant in token')
     }
 
-    requestContextStorage.run(
-      {
-        tenantId: payload.tenantId as TenantId,
-        userId: payload.sub,
-        email: payload.email,
-        role: payload.role,
-      },
-      () => next(),
-    )
+    const ctx: {
+      tenantId: TenantId
+      userId: number
+      email: string
+      role: string
+      traceId?: string
+    } = {
+      tenantId: payload.tenantId as TenantId,
+      userId: payload.sub,
+      email: payload.email,
+      role: payload.role,
+    }
+    const traceId = getReqId(req)
+    if (traceId !== undefined) ctx.traceId = traceId
+    requestContextStorage.run(ctx, () => next())
   }
+}
+
+function getReqId(req: IncomingMessage): string | undefined {
+  // fastify 把 reqId 挂在 req 上
+  const maybeId = (req as unknown as { id?: unknown }).id
+  return typeof maybeId === 'string' ? maybeId : undefined
 }
