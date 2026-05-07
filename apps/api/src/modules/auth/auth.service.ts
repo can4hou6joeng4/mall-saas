@@ -16,6 +16,7 @@ export interface JwtPayload {
   tenantId: number
   email: string
   role: string
+  scope: 'tenant'
 }
 
 export interface AuthResult {
@@ -87,6 +88,7 @@ export class AuthService {
       tenantId: user.tenantId,
       email: user.email,
       role: user.role,
+      scope: 'tenant',
     }
     const accessToken = await this.jwt.signAsync(payload, { expiresIn: this.ttlSeconds })
     return {

@@ -18,6 +18,7 @@ export class TenantModule implements NestModule {
         'docs/(.*)',
         'auth/(.*)',
         'webhooks/(.*)',
+        'admin/(.*)',
       )
       .forRoutes('*')
   }

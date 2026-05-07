@@ -83,6 +83,15 @@ model Payment {
   @@index([orderId])
 }
 
+// 平台超管账号 —— 跨租户、不受 RLS 约束、仅由 superuser 客户端访问
+model PlatformAdmin {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 model Note {
   id        Int      @id @default(autoincrement())
   tenantId  Int

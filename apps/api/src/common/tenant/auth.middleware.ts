@@ -6,9 +6,10 @@ import { requestContextStorage } from './tenant-context.js'
 
 interface JwtPayload {
   sub: number
-  tenantId: number
+  tenantId?: number
   email: string
   role: string
+  scope?: 'tenant' | 'platform'
 }
 
 @Injectable()
@@ -28,6 +29,9 @@ export class AuthMiddleware implements NestMiddleware {
       payload = this.jwt.verify<JwtPayload>(token)
     } catch {
       throw new UnauthorizedException('invalid or expired token')
+    }
+    if (payload.scope && payload.scope !== 'tenant') {
+      throw new UnauthorizedException('this endpoint requires a tenant token')
     }
     if (!isValidTenantId(payload.tenantId)) {
       throw new UnauthorizedException('invalid tenant in token')
