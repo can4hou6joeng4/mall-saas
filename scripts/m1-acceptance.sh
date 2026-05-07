@@ -7,6 +7,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT}"
 
 export DATABASE_URL="${DATABASE_URL:-postgresql://mall:mall@localhost:5432/mall?schema=public}"
+export DATABASE_APP_URL="${DATABASE_APP_URL:-postgresql://mall_app:mall_app@localhost:5432/mall?schema=public}"
 export REDIS_URL="${REDIS_URL:-redis://localhost:6379/0}"
 export NODE_ENV="${NODE_ENV:-test}"
 export LOG_LEVEL="${LOG_LEVEL:-error}"

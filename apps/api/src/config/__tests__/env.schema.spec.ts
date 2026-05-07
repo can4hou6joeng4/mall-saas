@@ -7,6 +7,7 @@ describe('envSchema', () => {
     PORT: '3000',
     LOG_LEVEL: 'info',
     DATABASE_URL: 'postgresql://mall:mall@localhost:5432/mall?schema=public',
+    DATABASE_APP_URL: 'postgresql://mall_app:mall_app@localhost:5432/mall?schema=public',
     REDIS_URL: 'redis://localhost:6379/0',
   }
 

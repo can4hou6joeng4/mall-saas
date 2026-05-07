@@ -8,6 +8,7 @@ describe('GET /ping (e2e)', () => {
   beforeAll(async () => {
     process.env['NODE_ENV'] = 'test'
     process.env['DATABASE_URL'] = 'postgresql://mall:mall@localhost:5432/mall?schema=public'
+    process.env['DATABASE_APP_URL'] = 'postgresql://mall_app:mall_app@localhost:5432/mall?schema=public'
     process.env['REDIS_URL'] = 'redis://localhost:6379/0'
     process.env['LOG_LEVEL'] = 'error'
 
