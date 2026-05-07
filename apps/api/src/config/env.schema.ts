@@ -9,6 +9,7 @@ export const envSchema = z.object({
   REDIS_URL: z.string().url(),
   JWT_SECRET: z.string().min(32),
   JWT_TTL_SECONDS: z.coerce.number().int().positive().default(3600),
+  ORDER_TIMEOUT_MS: z.coerce.number().int().positive().default(30 * 60 * 1000),
 })
 
 export type Env = z.infer<typeof envSchema>

@@ -6,6 +6,7 @@ import {
 import type { TenantId } from '@mall/shared'
 import { PrismaService } from '../../common/prisma/prisma.service.js'
 import type { CreateOrderDto, ListOrdersQuery } from './order.dto.js'
+import { OrderTimeoutQueue } from './order-timeout.queue.js'
 
 export const ORDER_STATUS = {
   pending: 'pending',
@@ -16,10 +17,13 @@ export type OrderStatus = (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS]
 
 @Injectable()
 export class OrderService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly timeoutQueue: OrderTimeoutQueue,
+  ) {}
 
-  create(tenantId: TenantId, userId: number, dto: CreateOrderDto) {
-    return this.prisma.withTenant(tenantId, async (tx) => {
+  async create(tenantId: TenantId, userId: number, dto: CreateOrderDto) {
+    const order = await this.prisma.withTenant(tenantId, async (tx) => {
       const ids = dto.items.map((i) => i.productId)
       const products = await tx.product.findMany({ where: { id: { in: ids } } })
       if (products.length !== new Set(ids).size) {
@@ -27,8 +31,6 @@ export class OrderService {
       }
       const priceMap = new Map(products.map((p) => [p.id, p.priceCents]))
 
-      // 原子扣减库存：UPDATE WHERE stock >= q —— 0 行受影响即代表库存不足
-      // 在 RLS 作用域下，跨租户商品自然返回 0 行（已在上一步 findMany 校验）
       for (const item of dto.items) {
         const affected = await tx.$executeRaw`
           UPDATE "Product"
@@ -64,6 +66,9 @@ export class OrderService {
         include: { items: true },
       })
     })
+
+    await this.timeoutQueue.enqueue({ tenantId, orderId: order.id })
+    return order
   }
 
   list(tenantId: TenantId, userId: number, query: ListOrdersQuery) {
@@ -108,7 +113,6 @@ export class OrderService {
           `order ${id} cannot be cancelled from status ${order.status}`,
         )
       }
-      // 回滚库存
       for (const item of order.items) {
         await tx.$executeRaw`
           UPDATE "Product" SET stock = stock + ${item.quantity}
@@ -120,6 +124,28 @@ export class OrderService {
         data: { status: ORDER_STATUS.cancelled },
         include: { items: true },
       })
+    })
+  }
+
+  // 幂等取消：仅当订单仍处于 pending 时回滚库存并取消，否则返回 false（用于异步超时任务）
+  cancelIfPending(tenantId: TenantId, id: number): Promise<boolean> {
+    return this.prisma.withTenant(tenantId, async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id },
+        include: { items: true },
+      })
+      if (!order || order.status !== ORDER_STATUS.pending) return false
+      for (const item of order.items) {
+        await tx.$executeRaw`
+          UPDATE "Product" SET stock = stock + ${item.quantity}
+          WHERE id = ${item.productId}
+        `
+      }
+      await tx.order.update({
+        where: { id },
+        data: { status: ORDER_STATUS.cancelled },
+      })
+      return true
     })
   }
 }

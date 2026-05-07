@@ -31,11 +31,12 @@ describe('Health endpoints (e2e)', () => {
     expect(res.json()).toEqual({ status: 'ok' })
   })
 
-  it('GET /readyz returns ok with db check', async () => {
+  it('GET /readyz returns ok with db + redis checks', async () => {
     const res = await app.inject({ method: 'GET', url: '/readyz' })
     expect(res.statusCode).toBe(200)
-    const body = res.json() as { status: string; checks: { db: string } }
+    const body = res.json() as { status: string; checks: { db: string; redis: string } }
     expect(body.status).toBe('ok')
     expect(body.checks.db).toBe('ok')
+    expect(body.checks.redis).toBe('ok')
   })
 })

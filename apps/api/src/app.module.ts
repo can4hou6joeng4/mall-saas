@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { ConfigModule } from './config/config.module.js'
 import { LoggerModule } from './common/logger/logger.module.js'
 import { PrismaModule } from './common/prisma/prisma.module.js'
+import { RedisModule } from './common/redis/redis.module.js'
 import { HealthModule } from './common/health/health.module.js'
 import { TenantModule } from './common/tenant/tenant.module.js'
 import { ExceptionsModule } from './common/exceptions/exceptions.module.js'
@@ -15,6 +16,7 @@ import { OrderModule } from './modules/order/order.module.js'
     ConfigModule,
     LoggerModule,
     PrismaModule,
+    RedisModule,
     HealthModule,
     TenantModule,
     ExceptionsModule,

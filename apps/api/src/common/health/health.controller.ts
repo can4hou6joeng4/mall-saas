@@ -1,9 +1,18 @@
 import { Controller, Get } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service.js'
+import { RedisService } from '../redis/redis.service.js'
+
+interface ReadinessBody {
+  status: 'ok' | 'fail'
+  checks: { db: 'ok' | 'fail'; redis: 'ok' | 'fail' }
+}
 
 @Controller()
 export class HealthController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
 
   @Get('/healthz')
   liveness(): { status: 'ok' } {
@@ -11,12 +20,21 @@ export class HealthController {
   }
 
   @Get('/readyz')
-  async readiness(): Promise<{ status: 'ok' | 'fail'; checks: { db: 'ok' | 'fail' } }> {
+  async readiness(): Promise<ReadinessBody> {
+    const [db, redis] = await Promise.all([this.checkDb(), this.redis.ping()])
+    const ok = db && redis
+    return {
+      status: ok ? 'ok' : 'fail',
+      checks: { db: db ? 'ok' : 'fail', redis: redis ? 'ok' : 'fail' },
+    }
+  }
+
+  private async checkDb(): Promise<boolean> {
     try {
       await this.prisma.$queryRaw`SELECT 1`
-      return { status: 'ok', checks: { db: 'ok' } }
+      return true
     } catch {
-      return { status: 'fail', checks: { db: 'fail' } }
+      return false
     }
   }
 }
