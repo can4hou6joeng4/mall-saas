@@ -23,6 +23,8 @@ describe('Auth API (e2e)', () => {
     process.env['JWT_TTL_SECONDS'] = '3600'
 
     owner = new PrismaClient({ adapter: new PrismaPg({ connectionString: SUPERUSER_URL }) })
+    await owner.orderItem.deleteMany({})
+    await owner.order.deleteMany({})
     await owner.user.deleteMany({})
     await owner.tenant.upsert({ where: { id: 1 }, update: {}, create: { id: 1, name: 't1' } })
     await owner.tenant.upsert({ where: { id: 2 }, update: {}, create: { id: 2, name: 't2' } })

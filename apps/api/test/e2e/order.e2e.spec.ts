@@ -26,10 +26,8 @@ describe('Orders API (e2e)', () => {
     process.env['JWT_TTL_SECONDS'] = '3600'
 
     owner = new PrismaClient({ adapter: new PrismaPg({ connectionString: SUPERUSER_URL }) })
-    await owner.orderItem.deleteMany({})
-    await owner.order.deleteMany({})
-    await owner.product.deleteMany({})
     await clearAuthData(owner)
+    await owner.product.deleteMany({})
     await ensureTenants(owner, [11])
 
     const { AppModule } = await import('../../src/app.module.js')

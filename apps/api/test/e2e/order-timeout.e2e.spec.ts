@@ -26,10 +26,8 @@ describe('Order timeout via BullMQ (e2e)', () => {
     process.env['ORDER_TIMEOUT_MS'] = '500'
 
     owner = new PrismaClient({ adapter: new PrismaPg({ connectionString: SUPERUSER_URL }) })
-    await owner.orderItem.deleteMany({})
-    await owner.order.deleteMany({})
-    await owner.product.deleteMany({})
     await clearAuthData(owner)
+    await owner.product.deleteMany({})
     await ensureTenants(owner, [42])
 
     const { AppModule } = await import('../../src/app.module.js')

@@ -25,8 +25,8 @@ describe('Products API (e2e, tenant-isolated)', () => {
     process.env['JWT_TTL_SECONDS'] = '3600'
 
     owner = new PrismaClient({ adapter: new PrismaPg({ connectionString: SUPERUSER_URL }) })
-    await owner.product.deleteMany({})
     await clearAuthData(owner)
+    await owner.product.deleteMany({})
     await ensureTenants(owner, [1, 2])
 
     const { AppModule } = await import('../../src/app.module.js')
