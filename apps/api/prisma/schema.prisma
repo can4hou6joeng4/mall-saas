@@ -7,10 +7,12 @@ datasource db {
 }
 
 model Tenant {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  notes     Note[]
+  id         Int        @id @default(autoincrement())
+  name       String
+  createdAt  DateTime   @default(now())
+  notes      Note[]
+  categories Category[]
+  products   Product[]
 }
 
 model Note {
@@ -21,4 +23,32 @@ model Note {
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId])
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  tenantId  Int
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  products  Product[]
+
+  @@index([tenantId])
+}
+
+model Product {
+  id         Int       @id @default(autoincrement())
+  tenantId   Int
+  categoryId Int?
+  name       String
+  priceCents Int
+  stock      Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, categoryId])
 }

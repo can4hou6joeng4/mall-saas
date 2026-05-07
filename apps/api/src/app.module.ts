@@ -5,8 +5,17 @@ import { PrismaModule } from './common/prisma/prisma.module.js'
 import { HealthModule } from './common/health/health.module.js'
 import { TenantModule } from './common/tenant/tenant.module.js'
 import { PingModule } from './modules/ping/ping.module.js'
+import { ProductModule } from './modules/product/product.module.js'
 
 @Module({
-  imports: [ConfigModule, LoggerModule, PrismaModule, HealthModule, TenantModule, PingModule],
+  imports: [
+    ConfigModule,
+    LoggerModule,
+    PrismaModule,
+    HealthModule,
+    TenantModule,
+    PingModule,
+    ProductModule,
+  ],
 })
 export class AppModule {}
