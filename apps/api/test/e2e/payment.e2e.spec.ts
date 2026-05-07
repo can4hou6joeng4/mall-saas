@@ -25,6 +25,7 @@ describe('Payments API (e2e)', () => {
     process.env['LOG_LEVEL'] = 'error'
     process.env['JWT_SECRET'] = 'a'.repeat(64)
     process.env['JWT_TTL_SECONDS'] = '3600'
+    process.env['AUTH_RATE_LIMIT_MAX'] = '9999'
     process.env['ORDER_TIMEOUT_MS'] = String(30 * 60 * 1000)
     process.env['PAYMENT_MOCK_SECRET'] = 'e2e-mock-shared-secret'
 

@@ -4,6 +4,7 @@ import {
   type NestModule,
 } from '@nestjs/common'
 import { AuthModule } from '../auth/auth.module.js'
+import { AuthRateLimitGuard } from '../../common/auth/auth-rate-limit.guard.js'
 import { AdminAuthMiddleware } from './admin-auth.middleware.js'
 import { AdminAuthService, ADMIN_JWT_TTL_TOKEN } from './admin-auth.service.js'
 import { AdminController } from './admin.controller.js'
@@ -16,9 +17,10 @@ import { AdminService } from './admin.service.js'
     AdminAuthService,
     AdminService,
     AdminAuthMiddleware,
+    AuthRateLimitGuard,
     {
       provide: ADMIN_JWT_TTL_TOKEN,
-      useFactory: (): number => Number(process.env['JWT_TTL_SECONDS'] ?? 3600),
+      useFactory: (): number => Number(process.env['JWT_TTL_SECONDS'] ?? 900),
     },
   ],
 })

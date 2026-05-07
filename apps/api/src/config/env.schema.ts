@@ -8,7 +8,9 @@ export const envSchema = z.object({
   DATABASE_APP_URL: z.string().url(),
   REDIS_URL: z.string().url(),
   JWT_SECRET: z.string().min(32),
-  JWT_TTL_SECONDS: z.coerce.number().int().positive().default(3600),
+  JWT_TTL_SECONDS: z.coerce.number().int().positive().default(900), // 15 分钟
+  JWT_REFRESH_TTL_SECONDS: z.coerce.number().int().positive().default(7 * 24 * 3600),
+  PASSWORD_RESET_TTL_SECONDS: z.coerce.number().int().positive().default(600),
   ORDER_TIMEOUT_MS: z.coerce.number().int().positive().default(30 * 60 * 1000),
   PAYMENT_MOCK_SECRET: z.string().min(16),
   PLATFORM_ADMIN_EMAIL: z.string().email().optional(),

@@ -10,6 +10,7 @@ interface JwtPayload {
   email: string
   role: string
   scope?: 'tenant' | 'platform'
+  tokenType?: 'access' | 'refresh' | 'reset'
 }
 
 @Injectable()
@@ -32,6 +33,9 @@ export class AuthMiddleware implements NestMiddleware {
     }
     if (payload.scope && payload.scope !== 'tenant') {
       throw new UnauthorizedException('this endpoint requires a tenant token')
+    }
+    if (payload.tokenType && payload.tokenType !== 'access') {
+      throw new UnauthorizedException('only access tokens are accepted here')
     }
     if (!isValidTenantId(payload.tenantId)) {
       throw new UnauthorizedException('invalid tenant in token')

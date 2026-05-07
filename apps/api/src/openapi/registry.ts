@@ -49,6 +49,7 @@ const loginInput = authLoginSchema.openapi('LoginRequest')
 const authResultSchema = z
   .object({
     accessToken: z.string(),
+    refreshToken: z.string(),
     user: z.object({
       id: z.number().int(),
       tenantId: z.number().int(),
@@ -60,6 +61,17 @@ const authResultSchema = z
 registry.register('RegisterRequest', registerInput)
 registry.register('LoginRequest', loginInput)
 registry.register('AuthResult', authResultSchema)
+
+const refreshSchema = z.object({ refreshToken: z.string() }).openapi('RefreshRequest')
+const requestPasswordResetSchema = z
+  .object({ tenantId: z.number().int().positive(), email: z.string().email() })
+  .openapi('RequestPasswordResetRequest')
+const confirmPasswordResetSchema = z
+  .object({ resetToken: z.string(), newPassword: z.string().min(8) })
+  .openapi('ConfirmPasswordResetRequest')
+registry.register('RefreshRequest', refreshSchema)
+registry.register('RequestPasswordResetRequest', requestPasswordResetSchema)
+registry.register('ConfirmPasswordResetRequest', confirmPasswordResetSchema)
 
 // Product
 const productSchema = z

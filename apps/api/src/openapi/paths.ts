@@ -122,6 +122,100 @@ registry.registerPath({
   },
 })
 
+registry.registerPath({
+  method: 'post',
+  path: '/auth/refresh',
+  tags: ['auth'],
+  request: {
+    body: {
+      content: {
+        'application/json': { schema: z.object({ refreshToken: z.string() }) },
+      },
+    },
+  },
+  responses: {
+    '200': {
+      description: 'Rotated token pair',
+      content: { 'application/json': { schema: schemaRefs.authResult } },
+    },
+    ...errorResponses,
+  },
+})
+
+registry.registerPath({
+  method: 'post',
+  path: '/auth/logout',
+  tags: ['auth'],
+  request: {
+    body: {
+      content: {
+        'application/json': { schema: z.object({ refreshToken: z.string() }) },
+      },
+    },
+  },
+  responses: {
+    '204': { description: 'Refresh token revoked' },
+    ...errorResponses,
+  },
+})
+
+registry.registerPath({
+  method: 'post',
+  path: '/auth/password-reset/request',
+  tags: ['auth'],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            tenantId: z.number().int().positive(),
+            email: z.string().email(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    '200': {
+      description: 'Reset token issued (dev returns it directly; prod sends email)',
+      content: {
+        'application/json': {
+          schema: z.object({
+            resetToken: z.string(),
+            expiresInSeconds: z.number().int(),
+          }),
+        },
+      },
+    },
+    ...errorResponses,
+  },
+})
+
+registry.registerPath({
+  method: 'post',
+  path: '/auth/password-reset/confirm',
+  tags: ['auth'],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            resetToken: z.string(),
+            newPassword: z.string().min(8),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    '200': {
+      description: 'Password updated',
+      content: { 'application/json': { schema: z.object({ ok: z.literal(true) }) } },
+    },
+    ...errorResponses,
+  },
+})
+
 // Products
 registry.registerPath({
   method: 'get',

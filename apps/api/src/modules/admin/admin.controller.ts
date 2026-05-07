@@ -9,7 +9,9 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common'
+import { AuthRateLimitGuard } from '../../common/auth/auth-rate-limit.guard.js'
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js'
 import { AdminAuthService, type PlatformAuthResult } from './admin-auth.service.js'
 import { AdminService } from './admin.service.js'
@@ -35,6 +37,7 @@ export class AdminController {
 
   @Post('auth/login')
   @HttpCode(200)
+  @UseGuards(AuthRateLimitGuard)
   login(
     @Body(new ZodValidationPipe(adminLoginSchema)) dto: AdminLoginDto,
   ): Promise<PlatformAuthResult> {
