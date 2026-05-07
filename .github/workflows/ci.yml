@@ -37,6 +37,7 @@ jobs:
       REDIS_URL: redis://localhost:6379/0
       JWT_SECRET: ci-secret-must-be-at-least-thirty-two-chars-long
       JWT_TTL_SECONDS: 3600
+      PAYMENT_MOCK_SECRET: ci-mock-payment-secret
       NODE_ENV: test
       LOG_LEVEL: info
     steps:

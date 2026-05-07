@@ -10,6 +10,7 @@ export const envSchema = z.object({
   JWT_SECRET: z.string().min(32),
   JWT_TTL_SECONDS: z.coerce.number().int().positive().default(3600),
   ORDER_TIMEOUT_MS: z.coerce.number().int().positive().default(30 * 60 * 1000),
+  PAYMENT_MOCK_SECRET: z.string().min(16),
 })
 
 export type Env = z.infer<typeof envSchema>
