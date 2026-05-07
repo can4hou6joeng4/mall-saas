@@ -11,6 +11,7 @@ export DATABASE_APP_URL="${DATABASE_APP_URL:-postgresql://mall_app:mall_app@loca
 export REDIS_URL="${REDIS_URL:-redis://localhost:6379/0}"
 export JWT_SECRET="${JWT_SECRET:-local-dev-secret-must-be-at-least-thirty-two-chars}"
 export JWT_TTL_SECONDS="${JWT_TTL_SECONDS:-3600}"
+export PAYMENT_MOCK_SECRET="${PAYMENT_MOCK_SECRET:-local-mock-payment-secret}"
 export NODE_ENV="${NODE_ENV:-test}"
 export LOG_LEVEL="${LOG_LEVEL:-error}"
 

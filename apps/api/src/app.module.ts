@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module.js'
 import { PingModule } from './modules/ping/ping.module.js'
 import { ProductModule } from './modules/product/product.module.js'
 import { OrderModule } from './modules/order/order.module.js'
+import { PaymentModule } from './modules/payment/payment.module.js'
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { OrderModule } from './modules/order/order.module.js'
     PingModule,
     ProductModule,
     OrderModule,
+    PaymentModule,
   ],
 })
 export class AppModule {}

@@ -11,7 +11,14 @@ export class TenantModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     consumer
       .apply(AuthMiddleware)
-      .exclude('healthz', 'readyz', 'docs', 'docs/(.*)', 'auth/(.*)')
+      .exclude(
+        'healthz',
+        'readyz',
+        'docs',
+        'docs/(.*)',
+        'auth/(.*)',
+        'webhooks/(.*)',
+      )
       .forRoutes('*')
   }
 }

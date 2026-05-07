@@ -21,6 +21,7 @@ describe('GET /ping (e2e, JWT-protected)', () => {
     process.env['LOG_LEVEL'] = 'error'
     process.env['JWT_SECRET'] = 'a'.repeat(64)
     process.env['JWT_TTL_SECONDS'] = '3600'
+    process.env['PAYMENT_MOCK_SECRET'] = 'e2e-mock-secret-16chars'
 
     owner = new PrismaClient({ adapter: new PrismaPg({ connectionString: SUPERUSER_URL }) })
     await clearAuthData(owner)
