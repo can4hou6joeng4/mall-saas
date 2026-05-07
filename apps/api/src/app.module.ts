@@ -12,6 +12,7 @@ import { PingModule } from './modules/ping/ping.module.js'
 import { ProductModule } from './modules/product/product.module.js'
 import { OrderModule } from './modules/order/order.module.js'
 import { PaymentModule } from './modules/payment/payment.module.js'
+import { CartModule } from './modules/cart/cart.module.js'
 import { AdminModule } from './modules/admin/admin.module.js'
 
 @Module({
@@ -29,6 +30,7 @@ import { AdminModule } from './modules/admin/admin.module.js'
     ProductModule,
     OrderModule,
     PaymentModule,
+    CartModule,
     AdminModule,
   ],
 })

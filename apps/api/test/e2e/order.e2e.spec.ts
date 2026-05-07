@@ -73,7 +73,7 @@ describe('Orders API (e2e)', () => {
     await owner.$disconnect()
   })
 
-  it('user creates an order successfully and stock is decremented', async () => {
+  it('user creates an order successfully and stock is reserved (not yet decremented)', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/orders',
@@ -92,9 +92,10 @@ describe('Orders API (e2e)', () => {
     expect(body.items).toHaveLength(1)
     expect(body.items[0]?.quantity).toBe(2)
 
-    // stock 验证（owner 视角）
+    // 预占语义：stock 不变，reservedStock 增加
     const phone = await owner.product.findUnique({ where: { id: phoneId } })
-    expect(phone?.stock).toBe(8)
+    expect(phone?.stock).toBe(10)
+    expect(phone?.reservedStock).toBe(2)
   })
 
   it('rejects ordering more than available stock with 409', async () => {
@@ -137,7 +138,9 @@ describe('Orders API (e2e)', () => {
     const codes = [r1.statusCode, r2.statusCode].sort()
     expect(codes).toEqual([201, 409])
     const scarce = await owner.product.findUnique({ where: { id: scarceId } })
-    expect(scarce?.stock).toBe(0)
+    // 预占语义：stock 仍是 1（未真扣），reservedStock 变成 1（被那笔成功的订单占住）
+    expect(scarce?.stock).toBe(1)
+    expect(scarce?.reservedStock).toBe(1)
   })
 
   it('user can list and fetch their own orders', async () => {
@@ -159,8 +162,7 @@ describe('Orders API (e2e)', () => {
     expect(detail.statusCode).toBe(200)
   })
 
-  it('cancelling a pending order rolls stock back and sets status', async () => {
-    // 下一个新单（quantity=3），然后取消
+  it('cancelling a pending order releases reserved stock and sets status', async () => {
     const create = await app.inject({
       method: 'POST',
       url: '/orders',
@@ -170,7 +172,7 @@ describe('Orders API (e2e)', () => {
     expect(create.statusCode).toBe(201)
     const orderId = (create.json() as { id: number }).id
 
-    const stockBefore = await owner.product.findUnique({ where: { id: phoneId } })
+    const before = await owner.product.findUnique({ where: { id: phoneId } })
 
     const cancel = await app.inject({
       method: 'POST',
@@ -180,10 +182,11 @@ describe('Orders API (e2e)', () => {
     expect(cancel.statusCode).toBe(200)
     expect((cancel.json() as { status: string }).status).toBe('cancelled')
 
-    const stockAfter = await owner.product.findUnique({ where: { id: phoneId } })
-    expect(stockAfter!.stock).toBe(stockBefore!.stock + 3)
+    const after = await owner.product.findUnique({ where: { id: phoneId } })
+    // stock 全程不动（pending 阶段从未真扣），reservedStock 应回到取消前 -3
+    expect(after!.stock).toBe(before!.stock)
+    expect(after!.reservedStock).toBe(before!.reservedStock - 3)
 
-    // 重复取消应 409
     const again = await app.inject({
       method: 'POST',
       url: `/orders/${orderId}/cancel`,

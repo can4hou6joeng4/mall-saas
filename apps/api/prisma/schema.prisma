@@ -16,21 +16,39 @@ model Tenant {
   users      User[]
   orders     Order[]
   payments   Payment[]
+  cartItems  CartItem[]
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
+  id           Int         @id @default(autoincrement())
   tenantId     Int
   email        String
   passwordHash String
-  role         String   @default("user")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  role         String      @default("user")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  tenant       Tenant      @relation(fields: [tenantId], references: [id])
   orders       Order[]
+  cartItems    CartItem[]
 
   @@unique([tenantId, email])
   @@index([tenantId])
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  tenantId  Int
+  userId    Int
+  productId Int
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@unique([tenantId, userId, productId])
+  @@index([tenantId, userId])
 }
 
 model Order {
@@ -115,17 +133,19 @@ model Category {
 }
 
 model Product {
-  id         Int         @id @default(autoincrement())
-  tenantId   Int
-  categoryId Int?
-  name       String
-  priceCents Int
-  stock      Int         @default(0)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  tenant     Tenant      @relation(fields: [tenantId], references: [id])
-  category   Category?   @relation(fields: [categoryId], references: [id])
-  orderItems OrderItem[]
+  id            Int         @id @default(autoincrement())
+  tenantId      Int
+  categoryId    Int?
+  name          String
+  priceCents    Int
+  stock         Int         @default(0)
+  reservedStock Int         @default(0)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  tenant        Tenant      @relation(fields: [tenantId], references: [id])
+  category      Category?   @relation(fields: [categoryId], references: [id])
+  orderItems    OrderItem[]
+  cartItems     CartItem[]
 
   @@index([tenantId])
   @@index([tenantId, categoryId])

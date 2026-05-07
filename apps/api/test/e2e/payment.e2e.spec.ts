@@ -154,19 +154,40 @@ describe('Payments API (e2e)', () => {
     expect(order?.status).toBe('paid')
   })
 
-  it('failed webhook cancels the order and rolls stock back', async () => {
-    const stockBefore = (await owner.product.findUnique({ where: { id: productId } }))!.stock
+  it('failed webhook cancels the order and releases reserved stock', async () => {
+    const before = (await owner.product.findUnique({ where: { id: productId } }))!
     const { orderId } = await placeOrder(2)
     const { providerRef } = await pay(orderId)
-    const stockMid = (await owner.product.findUnique({ where: { id: productId } }))!.stock
-    expect(stockMid).toBe(stockBefore - 2)
+    const mid = (await owner.product.findUnique({ where: { id: productId } }))!
+    // 下单只预占，stock 不变；reservedStock 增加
+    expect(mid.stock).toBe(before.stock)
+    expect(mid.reservedStock).toBe(before.reservedStock + 2)
 
     const r = await postWebhook({ providerRef, status: 'failed' })
     expect(r.statusCode).toBe(200)
 
     const order = await owner.order.findUnique({ where: { id: orderId } })
     expect(order?.status).toBe('cancelled')
-    const stockAfter = (await owner.product.findUnique({ where: { id: productId } }))!.stock
-    expect(stockAfter).toBe(stockBefore)
+    const after = (await owner.product.findUnique({ where: { id: productId } }))!
+    expect(after.stock).toBe(before.stock)
+    expect(after.reservedStock).toBe(before.reservedStock)
+  })
+
+  it('succeeded webhook truly decrements stock (consumes the reservation)', async () => {
+    const before = (await owner.product.findUnique({ where: { id: productId } }))!
+    const { orderId } = await placeOrder(1)
+    const { providerRef } = await pay(orderId)
+    const mid = (await owner.product.findUnique({ where: { id: productId } }))!
+    expect(mid.stock).toBe(before.stock)
+    expect(mid.reservedStock).toBe(before.reservedStock + 1)
+
+    const ack = await postWebhook({ providerRef, status: 'succeeded' })
+    expect(ack.statusCode).toBe(200)
+
+    const order = await owner.order.findUnique({ where: { id: orderId } })
+    expect(order?.status).toBe('paid')
+    const after = (await owner.product.findUnique({ where: { id: productId } }))!
+    expect(after.stock).toBe(before.stock - 1)
+    expect(after.reservedStock).toBe(before.reservedStock)
   })
 })

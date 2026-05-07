@@ -131,6 +131,30 @@ registry.register('Order', orderSchema)
 registry.register('CreateOrderRequest', createOrderSchema.openapi('CreateOrderRequest'))
 registry.register('ListOrdersQuery', listOrdersQuerySchema.openapi('ListOrdersQuery'))
 
+// Cart
+const cartItemSchema = z
+  .object({
+    id: z.number().int(),
+    tenantId: z.number().int(),
+    userId: z.number().int(),
+    productId: z.number().int(),
+    quantity: z.number().int(),
+    createdAt: z.string().datetime(),
+    updatedAt: z.string().datetime(),
+  })
+  .openapi('CartItem')
+registry.register('CartItem', cartItemSchema)
+registry.register(
+  'AddCartItemRequest',
+  z
+    .object({ productId: z.number().int().positive(), quantity: z.number().int().positive() })
+    .openapi('AddCartItemRequest'),
+)
+registry.register(
+  'UpdateCartItemRequest',
+  z.object({ quantity: z.number().int().positive() }).openapi('UpdateCartItemRequest'),
+)
+
 // Payment
 const paymentSchema = z
   .object({

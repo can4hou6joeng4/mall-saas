@@ -32,14 +32,16 @@ export class OrderService {
       const priceMap = new Map(products.map((p) => [p.id, p.priceCents]))
 
       for (const item of dto.items) {
+        // 仅预占（不真扣 stock）：要求 reservedStock + q <= stock
         const affected = await tx.$executeRaw`
           UPDATE "Product"
-          SET stock = stock - ${item.quantity}
-          WHERE id = ${item.productId} AND stock >= ${item.quantity}
+          SET "reservedStock" = "reservedStock" + ${item.quantity}
+          WHERE id = ${item.productId}
+            AND "reservedStock" + ${item.quantity} <= stock
         `
         if (affected === 0) {
           throw new ConflictException(
-            `insufficient stock for product ${item.productId}`,
+            `insufficient available stock for product ${item.productId}`,
           )
         }
       }
@@ -115,7 +117,7 @@ export class OrderService {
       }
       for (const item of order.items) {
         await tx.$executeRaw`
-          UPDATE "Product" SET stock = stock + ${item.quantity}
+          UPDATE "Product" SET "reservedStock" = "reservedStock" - ${item.quantity}
           WHERE id = ${item.productId}
         `
       }
@@ -127,7 +129,7 @@ export class OrderService {
     })
   }
 
-  // 幂等取消：仅当订单仍处于 pending 时回滚库存并取消，否则返回 false（用于异步超时任务）
+  // 幂等取消：仅当订单仍处于 pending 时释放预占并取消，否则返回 false（用于异步超时任务）
   cancelIfPending(tenantId: TenantId, id: number): Promise<boolean> {
     return this.prisma.withTenant(tenantId, async (tx) => {
       const order = await tx.order.findUnique({
@@ -137,13 +139,37 @@ export class OrderService {
       if (!order || order.status !== ORDER_STATUS.pending) return false
       for (const item of order.items) {
         await tx.$executeRaw`
-          UPDATE "Product" SET stock = stock + ${item.quantity}
+          UPDATE "Product" SET "reservedStock" = "reservedStock" - ${item.quantity}
           WHERE id = ${item.productId}
         `
       }
       await tx.order.update({
         where: { id },
         data: { status: ORDER_STATUS.cancelled },
+      })
+      return true
+    })
+  }
+
+  // 幂等确认：仅当订单仍处于 pending 时把预占转成实扣并标记 paid，否则返回 false（用于支付 webhook 成功）
+  confirmIfPending(tenantId: TenantId, id: number): Promise<boolean> {
+    return this.prisma.withTenant(tenantId, async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id },
+        include: { items: true },
+      })
+      if (!order || order.status !== ORDER_STATUS.pending) return false
+      for (const item of order.items) {
+        await tx.$executeRaw`
+          UPDATE "Product"
+          SET stock = stock - ${item.quantity},
+              "reservedStock" = "reservedStock" - ${item.quantity}
+          WHERE id = ${item.productId}
+        `
+      }
+      await tx.order.update({
+        where: { id },
+        data: { status: ORDER_STATUS.paid },
       })
       return true
     })

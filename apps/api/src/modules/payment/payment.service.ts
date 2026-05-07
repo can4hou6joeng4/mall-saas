@@ -103,19 +103,14 @@ export class PaymentService {
 
     const tenantId = payment.tenantId as TenantId
     if (event.status === 'succeeded') {
-      await this.prisma.withTenant(tenantId, async (tx) => {
-        await tx.payment.update({
+      await this.prisma.withTenant(tenantId, (tx) =>
+        tx.payment.update({
           where: { id: payment.id },
           data: { status: PAYMENT_STATUS.succeeded },
-        })
-        const order = await tx.order.findUnique({ where: { id: payment.orderId } })
-        if (order?.status === ORDER_STATUS.pending) {
-          await tx.order.update({
-            where: { id: order.id },
-            data: { status: ORDER_STATUS.paid },
-          })
-        }
-      })
+        }),
+      )
+      // 幂等：把预占转成实扣并把 order 标 paid（仅 pending 才转换）
+      await this.orders.confirmIfPending(tenantId, payment.orderId)
     } else {
       await this.prisma.withTenant(tenantId, (tx) =>
         tx.payment.update({
@@ -123,7 +118,7 @@ export class PaymentService {
           data: { status: PAYMENT_STATUS.failed },
         }),
       )
-      // 失败：把订单回到 cancelled 并恢复库存（idempotent，非 pending 自动跳过）
+      // 失败：把订单回到 cancelled 并释放预占（idempotent，非 pending 自动跳过）
       await this.orders.cancelIfPending(tenantId, payment.orderId)
     }
     return { acknowledged: true }

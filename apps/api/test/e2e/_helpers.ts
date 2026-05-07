@@ -44,6 +44,7 @@ export async function ensureTenants(owner: PrismaClient, ids: number[]): Promise
 }
 
 export async function clearAuthData(owner: PrismaClient): Promise<void> {
+  await owner.cartItem.deleteMany({})
   await owner.payment.deleteMany({})
   await owner.orderItem.deleteMany({})
   await owner.order.deleteMany({})

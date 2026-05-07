@@ -401,6 +401,106 @@ registry.registerPath({
   },
 })
 
+// Cart
+const cartItemListSchema = z.array(
+  z.object({
+    id: z.number().int(),
+    tenantId: z.number().int(),
+    userId: z.number().int(),
+    productId: z.number().int(),
+    quantity: z.number().int(),
+  }),
+)
+registry.registerPath({
+  method: 'get',
+  path: '/cart',
+  tags: ['cart'],
+  security: tenantSecurity,
+  responses: {
+    '200': {
+      description: 'Current cart items',
+      content: { 'application/json': { schema: cartItemListSchema } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'post',
+  path: '/cart/items',
+  tags: ['cart'],
+  security: tenantSecurity,
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            productId: z.number().int().positive(),
+            quantity: z.number().int().positive(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    '200': {
+      description: 'Cart item upserted (existing quantity is incremented)',
+      content: { 'application/json': { schema: cartItemListSchema.element } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'patch',
+  path: '/cart/items/{productId}',
+  tags: ['cart'],
+  security: tenantSecurity,
+  request: {
+    params: z.object({ productId: z.coerce.number().int().positive() }),
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({ quantity: z.number().int().positive() }),
+        },
+      },
+    },
+  },
+  responses: {
+    '200': {
+      description: 'Updated cart item',
+      content: { 'application/json': { schema: cartItemListSchema.element } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'delete',
+  path: '/cart/items/{productId}',
+  tags: ['cart'],
+  security: tenantSecurity,
+  request: { params: z.object({ productId: z.coerce.number().int().positive() }) },
+  responses: { '204': { description: 'Cart item removed' }, ...errorResponses },
+})
+registry.registerPath({
+  method: 'delete',
+  path: '/cart',
+  tags: ['cart'],
+  security: tenantSecurity,
+  responses: { '204': { description: 'Cart cleared' }, ...errorResponses },
+})
+registry.registerPath({
+  method: 'post',
+  path: '/cart/checkout',
+  tags: ['cart'],
+  security: tenantSecurity,
+  responses: {
+    '201': {
+      description: 'Cart materialized into a pending order; cart cleared',
+      content: { 'application/json': { schema: schemaRefs.order } },
+    },
+    ...errorResponses,
+  },
+})
+
 // Admin
 registry.registerPath({
   method: 'post',

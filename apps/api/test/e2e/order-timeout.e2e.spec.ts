@@ -65,7 +65,7 @@ describe('Order timeout via BullMQ (e2e)', () => {
     await owner.$disconnect()
   })
 
-  it('pending order is auto-cancelled and stock rolled back after timeout', async () => {
+  it('pending order is auto-cancelled and reserved stock released after timeout', async () => {
     const create = await app.inject({
       method: 'POST',
       url: '/orders',
@@ -76,7 +76,9 @@ describe('Order timeout via BullMQ (e2e)', () => {
     const orderId = (create.json() as { id: number }).id
 
     const stockAfterCreate = await owner.product.findUnique({ where: { id: productId } })
-    expect(stockAfterCreate?.stock).toBe(3)
+    // 预占语义：stock 不变，reservedStock 被预占
+    expect(stockAfterCreate?.stock).toBe(5)
+    expect(stockAfterCreate?.reservedStock).toBe(2)
 
     // 等待 timeout job 处理（默认 500ms 延迟 + 处理时间）
     for (let i = 0; i < 30; i++) {
@@ -90,5 +92,6 @@ describe('Order timeout via BullMQ (e2e)', () => {
 
     const stockAfterTimeout = await owner.product.findUnique({ where: { id: productId } })
     expect(stockAfterTimeout?.stock).toBe(5)
+    expect(stockAfterTimeout?.reservedStock).toBe(0)
   })
 })
