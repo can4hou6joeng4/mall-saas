@@ -13,6 +13,7 @@ import { ProductModule } from './modules/product/product.module.js'
 import { OrderModule } from './modules/order/order.module.js'
 import { PaymentModule } from './modules/payment/payment.module.js'
 import { CartModule } from './modules/cart/cart.module.js'
+import { CouponModule } from './modules/coupon/coupon.module.js'
 import { StoreModule } from './modules/store/store.module.js'
 import { AdminModule } from './modules/admin/admin.module.js'
 
@@ -32,6 +33,7 @@ import { AdminModule } from './modules/admin/admin.module.js'
     OrderModule,
     PaymentModule,
     CartModule,
+    CouponModule,
     StoreModule,
     AdminModule,
   ],

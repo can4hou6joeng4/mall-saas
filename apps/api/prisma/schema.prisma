@@ -17,6 +17,7 @@ model Tenant {
   orders     Order[]
   payments   Payment[]
   cartItems  CartItem[]
+  coupons    Coupon[]
 }
 
 model User {
@@ -52,17 +53,21 @@ model CartItem {
 }
 
 model Order {
-  id         Int         @id @default(autoincrement())
-  tenantId   Int
-  userId     Int
-  status     String      @default("pending")
-  totalCents Int
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  tenant     Tenant      @relation(fields: [tenantId], references: [id])
-  user       User        @relation(fields: [userId], references: [id])
-  items      OrderItem[]
-  payments   Payment[]
+  id            Int         @id @default(autoincrement())
+  tenantId      Int
+  userId        Int
+  status        String      @default("pending")
+  subtotalCents Int         @default(0)
+  discountCents Int         @default(0)
+  totalCents    Int
+  couponId      Int?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  tenant        Tenant      @relation(fields: [tenantId], references: [id])
+  user          User        @relation(fields: [userId], references: [id])
+  coupon        Coupon?     @relation(fields: [couponId], references: [id])
+  items         OrderItem[]
+  payments      Payment[]
 
   @@index([tenantId])
   @@index([tenantId, status])
@@ -108,6 +113,27 @@ model PlatformAdmin {
   passwordHash String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// 优惠券：discountType=PERCENT (折扣 = subtotal * value/100) 或 AMOUNT (折扣 = value，单位 cents)
+model Coupon {
+  id            Int       @id @default(autoincrement())
+  tenantId      Int
+  code          String
+  discountType  String
+  discountValue Int
+  minOrderCents Int       @default(0)
+  maxUsage      Int       @default(0)
+  usageCount    Int       @default(0)
+  expiresAt     DateTime?
+  status        String    @default("active")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  tenant        Tenant    @relation(fields: [tenantId], references: [id])
+  orders        Order[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
 }
 
 model Note {

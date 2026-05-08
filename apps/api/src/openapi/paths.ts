@@ -627,6 +627,86 @@ registry.registerPath({
 // Store BFF (商家后台，tenant-scoped admin role)
 registry.registerPath({
   method: 'get',
+  path: '/coupons',
+  tags: ['coupon'],
+  security: tenantSecurity,
+  request: {
+    query: z.object({
+      page: z.coerce.number().int().positive().optional(),
+      pageSize: z.coerce.number().int().positive().max(100).optional(),
+      status: z.enum(['active', 'disabled']).optional(),
+    }),
+  },
+  responses: {
+    '200': {
+      description: 'Tenant-scoped coupon list',
+      content: {
+        'application/json': {
+          schema: z.object({
+            items: z.array(
+              z.object({
+                id: z.number().int(),
+                tenantId: z.number().int(),
+                code: z.string(),
+                discountType: z.enum(['PERCENT', 'AMOUNT']),
+                discountValue: z.number().int(),
+                minOrderCents: z.number().int(),
+                maxUsage: z.number().int(),
+                usageCount: z.number().int(),
+                status: z.string(),
+              }),
+            ),
+            total: z.number().int(),
+            page: z.number().int(),
+            pageSize: z.number().int(),
+          }),
+        },
+      },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'post',
+  path: '/coupons',
+  tags: ['coupon'],
+  security: tenantSecurity,
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            code: z.string(),
+            discountType: z.enum(['PERCENT', 'AMOUNT']),
+            discountValue: z.number().int().positive(),
+            minOrderCents: z.number().int().nonnegative().optional(),
+            maxUsage: z.number().int().nonnegative().optional(),
+            expiresAt: z.string().datetime().optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    '201': { description: 'Coupon created' },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'patch',
+  path: '/coupons/{id}/disable',
+  tags: ['coupon'],
+  security: tenantSecurity,
+  request: { params: z.object({ id: z.coerce.number().int().positive() }) },
+  responses: {
+    '200': { description: 'Coupon disabled' },
+    ...errorResponses,
+  },
+})
+
+// Store BFF (商家后台，tenant-scoped admin role)
+registry.registerPath({
+  method: 'get',
   path: '/store/orders',
   tags: ['store'],
   security: tenantSecurity,

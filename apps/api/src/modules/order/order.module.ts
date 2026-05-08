@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+import { CouponModule } from '../coupon/coupon.module.js'
 import { OrderController } from './order.controller.js'
 import { OrderService } from './order.service.js'
 import {
@@ -7,6 +8,7 @@ import {
 } from './order-timeout.queue.js'
 
 @Module({
+  imports: [CouponModule],
   controllers: [OrderController],
   providers: [
     OrderService,

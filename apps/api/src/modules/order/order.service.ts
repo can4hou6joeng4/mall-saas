@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common'
 import type { TenantId } from '@mall/shared'
 import { PrismaService } from '../../common/prisma/prisma.service.js'
+import { CouponService } from '../coupon/coupon.service.js'
 import type { CreateOrderDto, ListOrdersQuery } from './order.dto.js'
 import { OrderTimeoutQueue } from './order-timeout.queue.js'
 
@@ -56,18 +57,44 @@ export class OrderService {
           subtotalCents: unit * item.quantity,
         }
       })
-      const totalCents = itemsWithPrice.reduce((s, i) => s + i.subtotalCents, 0)
+      const subtotalCents = itemsWithPrice.reduce((s, i) => s + i.subtotalCents, 0)
 
-      return tx.order.create({
-        data: {
-          tenantId,
-          userId,
-          totalCents,
-          status: ORDER_STATUS.pending,
-          items: { create: itemsWithPrice },
-        },
-        include: { items: true },
-      })
+      let discountCents = 0
+      let couponId: number | null = null
+      if (dto.couponCode) {
+        const coupon = await tx.coupon.findUnique({
+          where: { tenantId_code: { tenantId, code: dto.couponCode } },
+        })
+        if (!coupon) throw new NotFoundException(`coupon "${dto.couponCode}" not found`)
+        const { discountCents: d } = CouponService.computeDiscountCents(
+          coupon,
+          subtotalCents,
+        )
+        discountCents = d
+        couponId = coupon.id
+        // 原子并发安全：UPDATE WHERE 子句兜底（防止并发超过 maxUsage）
+        const limitClause =
+          coupon.maxUsage > 0 ? `AND "usageCount" < ${coupon.maxUsage}` : ''
+        const used = await tx.$executeRawUnsafe(
+          `UPDATE "Coupon" SET "usageCount" = "usageCount" + 1 WHERE id = ${coupon.id} ${limitClause}`,
+        )
+        if (used === 0) {
+          throw new ConflictException('coupon usage limit reached')
+        }
+      }
+      const totalCents = subtotalCents - discountCents
+
+      const orderData: Parameters<typeof tx.order.create>[0]['data'] = {
+        tenantId,
+        userId,
+        subtotalCents,
+        discountCents,
+        totalCents,
+        status: ORDER_STATUS.pending,
+        items: { create: itemsWithPrice },
+      }
+      if (couponId !== null) orderData.couponId = couponId
+      return tx.order.create({ data: orderData, include: { items: true } })
     })
 
     await this.timeoutQueue.enqueue({ tenantId, orderId: order.id })
