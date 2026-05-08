@@ -8,6 +8,8 @@ import {
   Logger,
 } from '@nestjs/common'
 import type { FastifyReply, FastifyRequest } from 'fastify'
+import { I18nService } from '../i18n/i18n.service.js'
+import { BusinessException } from './business.exception.js'
 
 interface ErrorBody {
   code: string
@@ -78,11 +80,28 @@ function sendJson(
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name)
 
+  constructor(private readonly i18n: I18nService) {}
+
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp()
     const reply = ctx.getResponse<FastifyReply | ServerResponse>()
     const request = ctx.getRequest<FastifyRequest>()
     const requestId = String(request.id ?? '')
+    const acceptLanguage = (request.headers as Record<string, unknown>)['accept-language']
+    const locale = this.i18n.resolve(acceptLanguage as string | undefined)
+
+    if (exception instanceof BusinessException) {
+      const status = exception.getStatus()
+      const message = this.i18n.translate(
+        locale,
+        exception.messageKey,
+        exception.messageParams,
+      )
+      const body: ErrorBody = { code: statusToCode(status), message, requestId }
+      this.logger.warn({ requestId, status, key: exception.messageKey })
+      sendJson(reply, status, body)
+      return
+    }
 
     if (exception instanceof HttpException) {
       const status = exception.getStatus()

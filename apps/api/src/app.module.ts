@@ -7,6 +7,7 @@ import { HealthModule } from './common/health/health.module.js'
 import { TenantModule } from './common/tenant/tenant.module.js'
 import { ExceptionsModule } from './common/exceptions/exceptions.module.js'
 import { MetricsModule } from './common/metrics/metrics.module.js'
+import { I18nModule } from './common/i18n/i18n.module.js'
 import { StorageModule } from './common/storage/storage.module.js'
 import { AuthModule } from './modules/auth/auth.module.js'
 import { PingModule } from './modules/ping/ping.module.js'
@@ -29,6 +30,7 @@ import { AdminModule } from './modules/admin/admin.module.js'
     TenantModule,
     ExceptionsModule,
     MetricsModule,
+    I18nModule,
     StorageModule,
     AuthModule,
     PingModule,

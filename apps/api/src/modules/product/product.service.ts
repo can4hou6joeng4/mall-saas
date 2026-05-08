@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { HttpStatus, Injectable } from '@nestjs/common'
 import type { Prisma } from '@prisma/client'
 import type { TenantId } from '@mall/shared'
 import { PrismaService } from '../../common/prisma/prisma.service.js'
+import { BusinessException } from '../../common/exceptions/business.exception.js'
 import type {
   CreateProductDto,
   ListProductsQuery,
@@ -15,6 +16,15 @@ function buildProductUpdateData(dto: UpdateProductDto): Prisma.ProductUncheckedU
   if (dto.stock !== undefined) data.stock = dto.stock
   if (dto.categoryId !== undefined) data.categoryId = dto.categoryId
   return data
+}
+
+function notFound(id: number): BusinessException {
+  return new BusinessException(
+    HttpStatus.NOT_FOUND,
+    'product.notFound',
+    { id },
+    `product ${id} not found`,
+  )
 }
 
 @Injectable()
@@ -54,18 +64,14 @@ export class ProductService {
     const product = await this.prisma.withTenant(tenantId, (tx) =>
       tx.product.findUnique({ where: { id } }),
     )
-    if (!product) {
-      throw new NotFoundException(`product ${id} not found`)
-    }
+    if (!product) throw notFound(id)
     return product
   }
 
   update(tenantId: TenantId, id: number, dto: UpdateProductDto) {
     return this.prisma.withTenant(tenantId, async (tx) => {
       const existing = await tx.product.findUnique({ where: { id } })
-      if (!existing) {
-        throw new NotFoundException(`product ${id} not found`)
-      }
+      if (!existing) throw notFound(id)
       return tx.product.update({ where: { id }, data: buildProductUpdateData(dto) })
     })
   }
@@ -73,9 +79,7 @@ export class ProductService {
   remove(tenantId: TenantId, id: number) {
     return this.prisma.withTenant(tenantId, async (tx) => {
       const existing = await tx.product.findUnique({ where: { id } })
-      if (!existing) {
-        throw new NotFoundException(`product ${id} not found`)
-      }
+      if (!existing) throw notFound(id)
       await tx.product.delete({ where: { id } })
     })
   }
