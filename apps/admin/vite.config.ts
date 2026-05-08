@@ -16,5 +16,7 @@ export default defineConfig({
     globals: false,
     environment: 'jsdom',
     setupFiles: ['./test/setup.ts'],
+    // playwright e2e 由 `pnpm test:e2e` 单独跑，不被 vitest 拾取
+    include: ['test/**/*.spec.ts', 'test/**/*.spec.tsx'],
   },
 })
