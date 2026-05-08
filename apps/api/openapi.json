@@ -617,7 +617,8 @@
           "provider": {
             "type": "string",
             "enum": [
-              "mock"
+              "mock",
+              "stripe"
             ],
             "default": "mock"
           }
@@ -2369,7 +2370,8 @@
                   "provider": {
                     "type": "string",
                     "enum": [
-                      "mock"
+                      "mock",
+                      "stripe"
                     ],
                     "default": "mock"
                   }

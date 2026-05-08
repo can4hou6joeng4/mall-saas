@@ -1382,7 +1382,7 @@ export interface paths {
                          * @default mock
                          * @enum {string}
                          */
-                        provider?: "mock";
+                        provider?: "mock" | "stripe";
                     };
                 };
             };
@@ -2755,7 +2755,7 @@ export interface components {
              * @default mock
              * @enum {string}
              */
-            provider: "mock";
+            provider: "mock" | "stripe";
         };
         Tenant: {
             id: number;
