@@ -12,7 +12,7 @@ export class LocalStorageProvider implements StorageProvider {
   readonly name = 'local'
 
   private get root(): string {
-    return resolve(process.env[UPLOAD_DIR_ENV] ?? './var/uploads')
+    return resolve(process.env[UPLOAD_DIR_ENV] ?? '/tmp/mall-uploads')
   }
 
   private get publicBase(): string {

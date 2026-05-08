@@ -36,7 +36,8 @@ export async function registerFastifyPlugins(app: NestFastifyApplication): Promi
   })
 
   // 静态投放：本地存储模式下把 uploads 暴露到 /uploads（生产改为 CDN/对象存储）
-  const uploadsDir = resolve(process.env['STORAGE_LOCAL_DIR'] ?? './var/uploads')
+  // 默认走 /tmp 避免镜像内 /app 非 root 用户无写权限
+  const uploadsDir = resolve(process.env['STORAGE_LOCAL_DIR'] ?? '/tmp/mall-uploads')
   await mkdir(uploadsDir, { recursive: true })
   await register(fastifyStatic, {
     root: uploadsDir,
