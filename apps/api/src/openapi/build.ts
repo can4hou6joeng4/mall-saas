@@ -30,6 +30,8 @@ export function buildOpenApiDocument(): BuiltOpenApiDocument {
       { name: 'product', description: 'Tenant 商品 CRUD' },
       { name: 'order', description: 'Tenant 订单 / 库存' },
       { name: 'payment', description: 'Tenant 支付 + Provider Webhook' },
+      { name: 'cart', description: 'Tenant 购物车' },
+      { name: 'store', description: '商家后台（tenant-scoped admin role）' },
       { name: 'admin', description: 'Platform 超管入口' },
     ],
   }) as unknown as BuiltOpenApiDocument

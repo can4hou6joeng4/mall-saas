@@ -11,6 +11,7 @@ import { OrderTimeoutQueue } from './order-timeout.queue.js'
 export const ORDER_STATUS = {
   pending: 'pending',
   paid: 'paid',
+  shipped: 'shipped',
   cancelled: 'cancelled',
 } as const
 export type OrderStatus = (typeof ORDER_STATUS)[keyof typeof ORDER_STATUS]

@@ -624,4 +624,76 @@ registry.registerPath({
   },
 })
 
+// Store BFF (商家后台，tenant-scoped admin role)
+registry.registerPath({
+  method: 'get',
+  path: '/store/orders',
+  tags: ['store'],
+  security: tenantSecurity,
+  request: {
+    query: z.object({
+      page: z.coerce.number().int().positive().optional(),
+      pageSize: z.coerce.number().int().positive().max(100).optional(),
+      status: z.enum(['pending', 'paid', 'shipped', 'cancelled']).optional(),
+      userId: z.coerce.number().int().positive().optional(),
+    }),
+  },
+  responses: {
+    '200': {
+      description: 'Orders across all users in this tenant',
+      content: {
+        'application/json': {
+          schema: z.object({
+            items: z.array(schemaRefs.order),
+            total: z.number().int(),
+            page: z.number().int(),
+            pageSize: z.number().int(),
+          }),
+        },
+      },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'post',
+  path: '/store/orders/{id}/ship',
+  tags: ['store'],
+  security: tenantSecurity,
+  request: { params: z.object({ id: z.coerce.number().int().positive() }) },
+  responses: {
+    '200': {
+      description: 'Order shipped',
+      content: { 'application/json': { schema: schemaRefs.order } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'get',
+  path: '/store/dashboard',
+  tags: ['store'],
+  security: tenantSecurity,
+  responses: {
+    '200': {
+      description: 'Store dashboard aggregates',
+      content: {
+        'application/json': {
+          schema: z.object({
+            ordersByStatus: z.record(
+              z.string(),
+              z.object({ count: z.number().int(), totalCents: z.number().int() }),
+            ),
+            productCount: z.number().int(),
+            lowStockProducts: z.number().int(),
+            lowStockThreshold: z.number().int(),
+            reservedStockTotal: z.number().int(),
+          }),
+        },
+      },
+    },
+    ...errorResponses,
+  },
+})
+
 export {}
