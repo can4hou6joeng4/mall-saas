@@ -244,6 +244,9 @@
           "stock": {
             "type": "integer"
           },
+          "reservedStock": {
+            "type": "integer"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -260,6 +263,7 @@
           "name",
           "priceCents",
           "stock",
+          "reservedStock",
           "createdAt",
           "updatedAt"
         ]

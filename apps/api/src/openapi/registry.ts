@@ -82,6 +82,7 @@ const productSchema = z
     name: z.string(),
     priceCents: z.number().int(),
     stock: z.number().int(),
+    reservedStock: z.number().int(),
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),
   })
