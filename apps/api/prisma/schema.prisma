@@ -159,20 +159,37 @@ model Category {
 }
 
 model Product {
-  id            Int         @id @default(autoincrement())
+  id            Int            @id @default(autoincrement())
   tenantId      Int
   categoryId    Int?
   name          String
   priceCents    Int
-  stock         Int         @default(0)
-  reservedStock Int         @default(0)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  tenant        Tenant      @relation(fields: [tenantId], references: [id])
-  category      Category?   @relation(fields: [categoryId], references: [id])
+  stock         Int            @default(0)
+  reservedStock Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  tenant        Tenant         @relation(fields: [tenantId], references: [id])
+  category      Category?      @relation(fields: [categoryId], references: [id])
   orderItems    OrderItem[]
   cartItems     CartItem[]
+  images        ProductImage[]
 
   @@index([tenantId])
   @@index([tenantId, categoryId])
+}
+
+model ProductImage {
+  id          Int      @id @default(autoincrement())
+  tenantId    Int
+  productId   Int
+  storageKey  String
+  url         String
+  contentType String
+  byteSize    Int
+  position    Int      @default(0)
+  createdAt   DateTime @default(now())
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([productId])
 }

@@ -22,6 +22,7 @@ export class TenantModule implements NestModule {
         'auth/(.*)',
         'webhooks/(.*)',
         'admin/(.*)',
+        'uploads/(.*)',
       )
       .forRoutes('*')
   }
