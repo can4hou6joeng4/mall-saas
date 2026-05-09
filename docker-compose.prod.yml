@@ -1,0 +1,90 @@
+# 生产单机部署样例：api + postgres + redis 完整 stack。
+# 使用：
+#   1. cp .env.prod.example .env.prod，填好真实凭据（不要入库）
+#   2. docker compose -f docker-compose.prod.yml --env-file .env.prod build api
+#   3. docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+# api 依赖 postgres/redis healthy 后才启动；prisma migrate 在 api 启动前 init 容器里执行。
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mall}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+      POSTGRES_DB: ${POSTGRES_DB:-mall}
+    volumes:
+      - mall_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mall} -d ${POSTGRES_DB:-mall}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - mall_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # 一次性迁移容器：apply 完 prisma migrate 后退出，api 依赖它 service_completed_successfully
+  # 注意：runner 镜像不带 prisma CLI（dev dep），所以这里 build target=migrate 单独镜像
+  migrate:
+    image: ${MALL_MIGRATE_IMAGE:-mall-api-migrate:latest}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mall}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-mall}?schema=public
+    restart: "no"
+
+  api:
+    image: ${MALL_API_IMAGE:-mall-api:latest}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: runner
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mall}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-mall}?schema=public
+      DATABASE_APP_URL: postgresql://${POSTGRES_APP_USER:-mall_app}:${POSTGRES_APP_PASSWORD:?POSTGRES_APP_PASSWORD required}@postgres:5432/${POSTGRES_DB:-mall}?schema=public
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required, ≥32 chars}
+      JWT_TTL_SECONDS: ${JWT_TTL_SECONDS:-900}
+      JWT_REFRESH_TTL_SECONDS: ${JWT_REFRESH_TTL_SECONDS:-604800}
+      PAYMENT_MOCK_SECRET: ${PAYMENT_MOCK_SECRET:?PAYMENT_MOCK_SECRET required}
+      PLATFORM_ADMIN_EMAIL: ${PLATFORM_ADMIN_EMAIL:?PLATFORM_ADMIN_EMAIL required}
+      PLATFORM_ADMIN_PASSWORD: ${PLATFORM_ADMIN_PASSWORD:?PLATFORM_ADMIN_PASSWORD required}
+      ORDER_TIMEOUT_MS: ${ORDER_TIMEOUT_MS:-1800000}
+      AUTH_RATE_LIMIT_MAX: ${AUTH_RATE_LIMIT_MAX:-30}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-200}
+      NODE_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      PORT: "3000"
+    ports:
+      - "${API_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/healthz | grep -q '\"status\":\"ok\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+volumes:
+  mall_pg_data:
+  mall_redis_data:

@@ -47,3 +47,12 @@ USER app
 EXPOSE 3000
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "dist/main.js"]
+
+# 单独的 migrate 镜像：复用 build 阶段的 prisma CLI（runtime 镜像不带 dev deps）
+# 用法：docker compose 在生产部署时用 target=migrate 起一次性容器跑 prisma migrate deploy
+# prisma 7 对 config.schema 的支持在某些 CLI 子命令下还不稳定，--schema 显式传更可靠
+FROM build AS migrate
+WORKDIR /repo/apps/api
+ENV NODE_ENV=production
+ENTRYPOINT ["pnpm", "exec", "prisma"]
+CMD ["migrate", "deploy", "--schema=prisma/schema.prisma"]
