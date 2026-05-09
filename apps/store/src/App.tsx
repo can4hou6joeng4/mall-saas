@@ -3,6 +3,8 @@ import { LoginPage } from './pages/LoginPage.js'
 import { DashboardPage } from './pages/DashboardPage.js'
 import { ProductsPage } from './pages/ProductsPage.js'
 import { OrdersPage } from './pages/OrdersPage.js'
+import { OrderDetailPage } from './pages/OrderDetailPage.js'
+import { CouponsPage } from './pages/CouponsPage.js'
 import { clearSession, getTenantId, getToken } from './api/client.js'
 
 function ProtectedShell() {
@@ -21,6 +23,9 @@ function ProtectedShell() {
           </NavLink>
           <NavLink to="/orders" className={({ isActive }) => (isActive ? 'active' : '')}>
             Orders
+          </NavLink>
+          <NavLink to="/coupons" className={({ isActive }) => (isActive ? 'active' : '')}>
+            Coupons
           </NavLink>
         </nav>
         <div className="row">
@@ -42,6 +47,8 @@ function ProtectedShell() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/orders/:id" element={<OrderDetailPage />} />
+          <Route path="/coupons" element={<CouponsPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>

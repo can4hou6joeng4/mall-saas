@@ -4,6 +4,8 @@ export type AuthResult = components['schemas']['AuthResult']
 export type Product = components['schemas']['Product']
 export type ProductList = components['schemas']['ProductList']
 export type Order = components['schemas']['Order']
+export type StoreOrderDetail = components['schemas']['StoreOrderDetail']
+export type Coupon = components['schemas']['Coupon']
 export type ErrorResponse = components['schemas']['ErrorResponse']
 
 interface PaginatedList<T> {
@@ -173,8 +175,31 @@ export const api = {
   shipOrder(orderId: number): Promise<Order> {
     return apiRequest(`/store/orders/${orderId}/ship`, { method: 'POST' })
   },
+  getStoreOrder(orderId: number): Promise<StoreOrderDetail> {
+    return apiRequest(`/store/orders/${orderId}`)
+  },
   dashboard(): Promise<DashboardStats> {
     return apiRequest('/store/dashboard')
+  },
+  listCoupons(query: {
+    page?: number
+    pageSize?: number
+    status?: 'active' | 'disabled'
+  }): Promise<PaginatedList<Coupon>> {
+    return apiRequest('/coupons', { query })
+  },
+  createCoupon(input: {
+    code: string
+    discountType: 'PERCENT' | 'AMOUNT'
+    discountValue: number
+    minOrderCents?: number
+    maxUsage?: number
+    expiresAt?: string
+  }): Promise<Coupon> {
+    return apiRequest('/coupons', { method: 'POST', body: input })
+  },
+  disableCoupon(id: number): Promise<Coupon> {
+    return apiRequest(`/coupons/${id}/disable`, { method: 'PATCH' })
   },
 }
 

@@ -33,6 +33,14 @@ export class StoreController {
     return this.store.listOrders(tenantId, query)
   }
 
+  @Get('orders/:id')
+  findOrder(
+    @CurrentTenant() tenantId: TenantId,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.store.findOne(tenantId, id)
+  }
+
   @Post('orders/:id/ship')
   @HttpCode(200)
   ship(@CurrentTenant() tenantId: TenantId, @Param('id', ParseIntPipe) id: number) {

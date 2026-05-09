@@ -197,6 +197,50 @@ registry.register(
   listPaymentsAdminQuerySchema.openapi('AdminListPaymentsQuery'),
 )
 
+// Store order detail（含 user / coupon / payments，仅 store BFF 使用）
+const couponSchema = z
+  .object({
+    id: z.number().int(),
+    tenantId: z.number().int(),
+    code: z.string(),
+    discountType: z.enum(['PERCENT', 'AMOUNT']),
+    discountValue: z.number().int(),
+    minOrderCents: z.number().int(),
+    maxUsage: z.number().int(),
+    usageCount: z.number().int(),
+    status: z.string(),
+    expiresAt: z.string().datetime().nullable(),
+    createdAt: z.string().datetime(),
+    updatedAt: z.string().datetime(),
+  })
+  .openapi('Coupon')
+registry.register('Coupon', couponSchema)
+
+const storeOrderDetailSchema = orderSchema
+  .extend({
+    user: z.object({ id: z.number().int(), email: z.string().email() }),
+    coupon: z
+      .object({
+        id: z.number().int(),
+        code: z.string(),
+        discountType: z.enum(['PERCENT', 'AMOUNT']),
+        discountValue: z.number().int(),
+        minOrderCents: z.number().int(),
+      })
+      .nullable(),
+    payments: z.array(
+      z.object({
+        id: z.number().int(),
+        providerName: z.string(),
+        providerRef: z.string(),
+        amountCents: z.number().int(),
+        status: z.string(),
+        createdAt: z.string().datetime(),
+      }),
+    ),
+  })
+  .openapi('StoreOrderDetail')
+registry.register('StoreOrderDetail', storeOrderDetailSchema)
 export const schemaRefs = {
   errorResponse: errorResponseSchema,
   authResult: authResultSchema,
@@ -205,4 +249,6 @@ export const schemaRefs = {
   order: orderSchema,
   payment: paymentSchema,
   tenant: tenantSchema,
+  storeOrderDetail: storeOrderDetailSchema,
+  coupon: couponSchema,
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiError, api } from '../api/client.js'
 
@@ -72,7 +73,9 @@ export function OrdersPage() {
               <tbody>
                 {ordersQuery.data.items.map((o) => (
                   <tr key={o.id}>
-                    <td>{o.id}</td>
+                    <td>
+                      <Link to={`/orders/${o.id}`}>#{o.id}</Link>
+                    </td>
                     <td>{o.userId}</td>
                     <td>
                       <span className={`status-pill ${o.status}`}>

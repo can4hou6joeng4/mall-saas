@@ -643,19 +643,7 @@ registry.registerPath({
       content: {
         'application/json': {
           schema: z.object({
-            items: z.array(
-              z.object({
-                id: z.number().int(),
-                tenantId: z.number().int(),
-                code: z.string(),
-                discountType: z.enum(['PERCENT', 'AMOUNT']),
-                discountValue: z.number().int(),
-                minOrderCents: z.number().int(),
-                maxUsage: z.number().int(),
-                usageCount: z.number().int(),
-                status: z.string(),
-              }),
-            ),
+            items: z.array(schemaRefs.coupon),
             total: z.number().int(),
             page: z.number().int(),
             pageSize: z.number().int(),
@@ -688,7 +676,10 @@ registry.registerPath({
     },
   },
   responses: {
-    '201': { description: 'Coupon created' },
+    '201': {
+      description: 'Coupon created',
+      content: { 'application/json': { schema: schemaRefs.coupon } },
+    },
     ...errorResponses,
   },
 })
@@ -699,7 +690,10 @@ registry.registerPath({
   security: tenantSecurity,
   request: { params: z.object({ id: z.coerce.number().int().positive() }) },
   responses: {
-    '200': { description: 'Coupon disabled' },
+    '200': {
+      description: 'Coupon disabled',
+      content: { 'application/json': { schema: schemaRefs.coupon } },
+    },
     ...errorResponses,
   },
 })
@@ -745,6 +739,20 @@ registry.registerPath({
     '200': {
       description: 'Order shipped',
       content: { 'application/json': { schema: schemaRefs.order } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'get',
+  path: '/store/orders/{id}',
+  tags: ['store'],
+  security: tenantSecurity,
+  request: { params: z.object({ id: z.coerce.number().int().positive() }) },
+  responses: {
+    '200': {
+      description: 'Order detail with user / coupon / payments (any user in tenant)',
+      content: { 'application/json': { schema: schemaRefs.storeOrderDetail } },
     },
     ...errorResponses,
   },

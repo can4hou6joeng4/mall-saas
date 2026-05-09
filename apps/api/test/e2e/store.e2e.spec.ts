@@ -141,6 +141,61 @@ describe('Store BFF (e2e)', () => {
     expect(again.statusCode).toBe(409)
   })
 
+  it('GET /store/orders/:id returns detail with user / coupon=null / payments=[]', async () => {
+    // 商家创建优惠券，user 下带 coupon 的订单
+    const coupon = await app.inject({
+      method: 'POST',
+      url: '/coupons',
+      headers: bearer(merchantToken),
+      payload: {
+        code: 'M21OFF',
+        discountType: 'AMOUNT',
+        discountValue: 200,
+        minOrderCents: 0,
+        maxUsage: 0,
+      },
+    })
+    expect(coupon.statusCode).toBe(201)
+
+    const placed = await app.inject({
+      method: 'POST',
+      url: '/orders',
+      headers: bearer(userToken),
+      payload: { items: [{ productId, quantity: 1 }], couponCode: 'M21OFF' },
+    })
+    const orderId = (placed.json() as { id: number }).id
+
+    const r = await app.inject({
+      method: 'GET',
+      url: `/store/orders/${orderId}`,
+      headers: bearer(merchantToken),
+    })
+    expect(r.statusCode).toBe(200)
+    const body = r.json() as {
+      id: number
+      status: string
+      items: { productId: number }[]
+      user: { email: string }
+      coupon: { code: string; discountType: string } | null
+      payments: unknown[]
+    }
+    expect(body.id).toBe(orderId)
+    expect(body.user.email).toBe('shopper@t44.dev')
+    expect(body.items[0]?.productId).toBe(productId)
+    expect(body.coupon?.code).toBe('M21OFF')
+    expect(body.coupon?.discountType).toBe('AMOUNT')
+    expect(Array.isArray(body.payments)).toBe(true)
+  })
+
+  it('GET /store/orders/:id 404 for unknown id', async () => {
+    const r = await app.inject({
+      method: 'GET',
+      url: '/store/orders/999999',
+      headers: bearer(merchantToken),
+    })
+    expect(r.statusCode).toBe(404)
+  })
+
   it('dashboard returns aggregated stats', async () => {
     const r = await app.inject({
       method: 'GET',

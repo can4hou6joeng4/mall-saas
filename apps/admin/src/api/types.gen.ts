@@ -2626,18 +2626,7 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            items: {
-                                id: number;
-                                tenantId: number;
-                                code: string;
-                                /** @enum {string} */
-                                discountType: "PERCENT" | "AMOUNT";
-                                discountValue: number;
-                                minOrderCents: number;
-                                maxUsage: number;
-                                usageCount: number;
-                                status: string;
-                            }[];
+                            items: components["schemas"]["Coupon"][];
                             total: number;
                             page: number;
                             pageSize: number;
@@ -2719,7 +2708,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["Coupon"];
+                    };
                 };
                 /** @description Bad request */
                 400: {
@@ -2803,7 +2794,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["Coupon"];
+                    };
                 };
                 /** @description Bad request */
                 400: {
@@ -3020,6 +3013,88 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/store/orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Order detail with user / coupon / payments (any user in tenant) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoreOrderDetail"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3315,6 +3390,48 @@ export interface components {
             tenantId?: number;
             /** @enum {string} */
             status?: "pending" | "succeeded" | "failed";
+        };
+        Coupon: {
+            id: number;
+            tenantId: number;
+            code: string;
+            /** @enum {string} */
+            discountType: "PERCENT" | "AMOUNT";
+            discountValue: number;
+            minOrderCents: number;
+            maxUsage: number;
+            usageCount: number;
+            status: string;
+            /** Format: date-time */
+            expiresAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        StoreOrderDetail: components["schemas"]["Order"] & {
+            user: {
+                id: number;
+                /** Format: email */
+                email: string;
+            };
+            coupon: {
+                id: number;
+                code: string;
+                /** @enum {string} */
+                discountType: "PERCENT" | "AMOUNT";
+                discountValue: number;
+                minOrderCents: number;
+            } | null;
+            payments: {
+                id: number;
+                providerName: string;
+                providerRef: string;
+                amountCents: number;
+                status: string;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
         };
     };
     responses: never;

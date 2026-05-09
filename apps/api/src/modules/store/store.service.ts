@@ -35,6 +35,41 @@ export class StoreService {
     })
   }
 
+  // 商家视角：单个订单详情，附带 user / coupon / payments（不受 owner 限制，仅 tenant 隔离）
+  findOne(tenantId: TenantId, orderId: number) {
+    return this.prisma.withTenant(tenantId, async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id: orderId },
+        include: {
+          items: true,
+          user: { select: { id: true, email: true } },
+          coupon: {
+            select: {
+              id: true,
+              code: true,
+              discountType: true,
+              discountValue: true,
+              minOrderCents: true,
+            },
+          },
+          payments: {
+            select: {
+              id: true,
+              providerName: true,
+              providerRef: true,
+              amountCents: true,
+              status: true,
+              createdAt: true,
+            },
+            orderBy: { id: 'desc' },
+          },
+        },
+      })
+      if (!order) throw new NotFoundException(`order ${orderId} not found`)
+      return order
+    })
+  }
+
   // paid → shipped 状态推进（只允许 paid 订单发货；已 shipped 重复则 409）
   ship(tenantId: TenantId, orderId: number) {
     return this.prisma.withTenant(tenantId, async (tx) => {

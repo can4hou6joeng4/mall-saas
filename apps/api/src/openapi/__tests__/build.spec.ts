@@ -25,6 +25,7 @@ const expectedPaths = [
   '/coupons',
   '/coupons/{id}/disable',
   '/store/orders',
+  '/store/orders/{id}',
   '/store/orders/{id}/ship',
   '/store/dashboard',
   '/admin/auth/login',
