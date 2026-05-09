@@ -3,6 +3,7 @@ import { LoginPage } from './pages/LoginPage.js'
 import { ProductsPage } from './pages/ProductsPage.js'
 import { CartPage } from './pages/CartPage.js'
 import { OrdersPage } from './pages/OrdersPage.js'
+import { OrderDetailPage } from './pages/OrderDetailPage.js'
 import { clearSession, getToken, getUserEmail } from './api/client.js'
 
 function ProtectedShell() {
@@ -41,6 +42,7 @@ function ProtectedShell() {
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/orders/:id" element={<OrderDetailPage />} />
           <Route path="*" element={<Navigate to="/products" replace />} />
         </Routes>
       </main>

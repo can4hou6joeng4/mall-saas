@@ -5,6 +5,7 @@ export type Product = components['schemas']['Product']
 export type ProductList = components['schemas']['ProductList']
 export type Order = components['schemas']['Order']
 export type CartItem = components['schemas']['CartItem']
+export type Payment = components['schemas']['Payment']
 export type ErrorResponse = components['schemas']['ErrorResponse']
 
 const TOKEN_KEY = 'mall_storefront_token'
@@ -189,5 +190,11 @@ export const api = {
   // Orders
   listOrders(): Promise<{ items: Order[]; total: number; page: number; pageSize: number }> {
     return apiRequest('/orders', { query: { page: 1, pageSize: 50 } })
+  },
+  getOrder(id: number): Promise<Order> {
+    return apiRequest(`/orders/${id}`)
+  },
+  payOrder(id: number, provider: string): Promise<Payment> {
+    return apiRequest(`/orders/${id}/pay`, { method: 'POST', body: { provider } })
   },
 }

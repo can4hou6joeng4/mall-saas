@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import { ApiError, api } from '../api/client.js'
 
 const STATUS_DISPLAY: Record<string, string> = {
@@ -41,7 +42,9 @@ export function OrdersPage() {
             <tbody>
               {ordersQuery.data.items.map((o) => (
                 <tr key={o.id}>
-                  <td>#{o.id}</td>
+                  <td>
+                    <Link to={`/orders/${o.id}`}>#{o.id}</Link>
+                  </td>
                   <td>
                     <span className={`status-pill ${o.status}`}>
                       {STATUS_DISPLAY[o.status] ?? o.status}
