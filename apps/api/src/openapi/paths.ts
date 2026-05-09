@@ -651,6 +651,55 @@ registry.registerPath({
     ...errorResponses,
   },
 })
+registry.registerPath({
+  method: 'get',
+  path: '/admin/users',
+  tags: ['admin'],
+  security: platformSecurity,
+  request: {
+    query: z.object({
+      page: z.coerce.number().int().positive().optional(),
+      pageSize: z.coerce.number().int().positive().max(100).optional(),
+      tenantId: z.coerce.number().int().positive().optional(),
+      email: z.string().optional(),
+      role: z.enum(['admin', 'user']).optional(),
+      locked: z.enum(['true', 'false']).optional(),
+    }),
+  },
+  responses: {
+    '200': {
+      description: 'Cross-tenant user list (no passwordHash)',
+      content: {
+        'application/json': {
+          schema: z.object({
+            items: z.array(schemaRefs.adminUser),
+            total: z.number().int(),
+            page: z.number().int(),
+            pageSize: z.number().int(),
+          }),
+        },
+      },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
+  method: 'patch',
+  path: '/admin/users/{id}/lock',
+  tags: ['admin'],
+  security: platformSecurity,
+  request: {
+    params: z.object({ id: z.coerce.number().int().positive() }),
+    body: { content: { 'application/json': { schema: z.object({ locked: z.boolean() }) } } },
+  },
+  responses: {
+    '200': {
+      description: 'User lock state updated',
+      content: { 'application/json': { schema: schemaRefs.adminUser } },
+    },
+    ...errorResponses,
+  },
+})
 
 // Store BFF (商家后台，tenant-scoped admin role)
 registry.registerPath({

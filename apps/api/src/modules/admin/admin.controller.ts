@@ -24,6 +24,10 @@ import {
   listOrdersAdminQuerySchema,
   type ListPaymentsAdminQuery,
   listPaymentsAdminQuerySchema,
+  type ListUsersAdminQuery,
+  listUsersAdminQuerySchema,
+  type SetUserLockedDto,
+  setUserLockedSchema,
   type UpdateTenantDto,
   updateTenantSchema,
 } from './admin.dto.js'
@@ -90,5 +94,20 @@ export class AdminController {
   @Get('payments/:id')
   findPayment(@Param('id', ParseIntPipe) id: number) {
     return this.admin.findPaymentDetail(id)
+  }
+
+  @Get('users')
+  listUsers(
+    @Query(new ZodValidationPipe(listUsersAdminQuerySchema)) query: ListUsersAdminQuery,
+  ) {
+    return this.admin.listUsers(query)
+  }
+
+  @Patch('users/:id/lock')
+  setUserLocked(
+    @Param('id', ParseIntPipe) id: number,
+    @Body(new ZodValidationPipe(setUserLockedSchema)) dto: SetUserLockedDto,
+  ) {
+    return this.admin.setUserLocked(id, dto.locked)
   }
 }

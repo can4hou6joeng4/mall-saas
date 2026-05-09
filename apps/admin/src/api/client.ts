@@ -6,6 +6,7 @@ export type TenantDetail = components['schemas']['TenantDetail']
 export type Order = components['schemas']['Order']
 export type Payment = components['schemas']['Payment']
 export type PaymentDetail = components['schemas']['PaymentDetail']
+export type AdminUser = components['schemas']['AdminUser']
 export type ErrorResponse = components['schemas']['ErrorResponse']
 
 interface PaginatedList<T> {
@@ -115,6 +116,19 @@ export const api = {
   },
   getPayment(id: number): Promise<PaymentDetail> {
     return apiRequest(`/admin/payments/${id}`)
+  },
+  listUsers(query: {
+    page?: number
+    pageSize?: number
+    tenantId?: number
+    email?: string
+    role?: 'admin' | 'user'
+    locked?: 'true' | 'false'
+  }): Promise<PaginatedList<AdminUser>> {
+    return apiRequest('/admin/users', { query })
+  },
+  setUserLocked(id: number, locked: boolean): Promise<AdminUser> {
+    return apiRequest(`/admin/users/${id}/lock`, { method: 'PATCH', body: { locked } })
   },
 }
 

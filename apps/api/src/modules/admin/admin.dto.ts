@@ -31,3 +31,18 @@ export const listPaymentsAdminQuerySchema = z.object({
   status: z.enum(['pending', 'succeeded', 'failed']).optional(),
 })
 export type ListPaymentsAdminQuery = z.infer<typeof listPaymentsAdminQuerySchema>
+
+export const listUsersAdminQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  pageSize: z.coerce.number().int().positive().max(100).default(20),
+  tenantId: z.coerce.number().int().positive().optional(),
+  email: z.string().max(200).optional(),
+  role: z.enum(['admin', 'user']).optional(),
+  locked: z.enum(['true', 'false']).optional(),
+})
+export type ListUsersAdminQuery = z.infer<typeof listUsersAdminQuerySchema>
+
+export const setUserLockedSchema = z.object({
+  locked: z.boolean(),
+})
+export type SetUserLockedDto = z.infer<typeof setUserLockedSchema>

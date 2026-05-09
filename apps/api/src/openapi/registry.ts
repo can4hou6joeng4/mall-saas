@@ -189,6 +189,20 @@ const paymentDetailSchema = paymentSchema
   .openapi('PaymentDetail')
 registry.register('PaymentDetail', paymentDetailSchema)
 
+// Admin user 视图（不含 passwordHash）
+const adminUserSchema = z
+  .object({
+    id: z.number().int(),
+    tenantId: z.number().int(),
+    email: z.string().email(),
+    role: z.string(),
+    locked: z.boolean(),
+    createdAt: z.string().datetime(),
+    updatedAt: z.string().datetime(),
+  })
+  .openapi('AdminUser')
+registry.register('AdminUser', adminUserSchema)
+
 // Admin
 const tenantSchema = z
   .object({
@@ -276,6 +290,7 @@ export const schemaRefs = {
   tenant: tenantSchema,
   tenantDetail: tenantDetailSchema,
   paymentDetail: paymentDetailSchema,
+  adminUser: adminUserSchema,
   storeOrderDetail: storeOrderDetailSchema,
   coupon: couponSchema,
 }

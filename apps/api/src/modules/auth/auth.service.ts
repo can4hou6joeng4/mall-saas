@@ -104,6 +104,9 @@ export class AuthService {
     if (!user || !verifyPassword(dto.password, user.passwordHash)) {
       throw new UnauthorizedException('invalid credentials')
     }
+    if (user.locked) {
+      throw new UnauthorizedException('account is locked')
+    }
     return this.issueTokens(user)
   }
 

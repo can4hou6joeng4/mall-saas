@@ -8,6 +8,7 @@ import type {
   CreateTenantDto,
   ListOrdersAdminQuery,
   ListPaymentsAdminQuery,
+  ListUsersAdminQuery,
   UpdateTenantDto,
 } from './admin.dto.js'
 
@@ -132,5 +133,54 @@ export class AdminService {
     })
     if (!payment) throw new NotFoundException(`payment ${id} not found`)
     return payment
+  }
+
+  // 跨租户用户列表（不返回 passwordHash）
+  async listUsers(query: ListUsersAdminQuery) {
+    const { page, pageSize, tenantId, email, role, locked } = query
+    const where: { tenantId?: number; email?: { contains: string }; role?: string; locked?: boolean } = {}
+    if (tenantId !== undefined) where.tenantId = tenantId
+    if (email !== undefined && email.length > 0) where.email = { contains: email }
+    if (role !== undefined) where.role = role
+    if (locked !== undefined) where.locked = locked === 'true'
+    const sys = this.prisma.getSuperuserClient()
+    const [items, total] = await Promise.all([
+      sys.user.findMany({
+        where,
+        orderBy: { id: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        select: {
+          id: true,
+          tenantId: true,
+          email: true,
+          role: true,
+          locked: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      sys.user.count({ where }),
+    ])
+    return { items, total, page, pageSize }
+  }
+
+  async setUserLocked(id: number, locked: boolean) {
+    const sys = this.prisma.getSuperuserClient()
+    const existing = await sys.user.findUnique({ where: { id } })
+    if (!existing) throw new NotFoundException(`user ${id} not found`)
+    return sys.user.update({
+      where: { id },
+      data: { locked },
+      select: {
+        id: true,
+        tenantId: true,
+        email: true,
+        role: true,
+        locked: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
   }
 }

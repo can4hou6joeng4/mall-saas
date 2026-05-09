@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+# M28 验收冒烟：admin 跨租户用户管理（list + lock）
+# - tenant 内造 user → platform admin 列表能看到 → lock → user login 401 → unlock → 200
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "${ROOT}"
+
+export DATABASE_URL="${DATABASE_URL:-postgresql://mall:mall@localhost:5432/mall?schema=public}"
+export DATABASE_APP_URL="${DATABASE_APP_URL:-postgresql://mall_app:mall_app@localhost:5432/mall?schema=public}"
+export REDIS_URL="${REDIS_URL:-redis://localhost:6379/0}"
+export JWT_SECRET="${JWT_SECRET:-local-dev-secret-must-be-at-least-thirty-two-chars}"
+export PAYMENT_MOCK_SECRET="${PAYMENT_MOCK_SECRET:-m28-mock-secret-16chars}"
+export PLATFORM_ADMIN_EMAIL="${PLATFORM_ADMIN_EMAIL:-platform@example.com}"
+export PLATFORM_ADMIN_PASSWORD="${PLATFORM_ADMIN_PASSWORD:-platform-pw-1234}"
+
+CONTAINER="mall-api-m28-smoke"
+HOST_PORT="${HOST_PORT:-3028}"
+IMAGE_TAG="${IMAGE_TAG:-mall-api:smoke}"
+TENANT_ID="${TENANT_ID:-9928}"
+USER="m28-user@example.com"
+PW="m28-acc-pw!"
+
+PSQL_CMD="${PSQL_CMD:-docker exec -i mall-postgres psql -U mall -d mall}"
+SKIP_PIPELINE="${SKIP_PIPELINE:-}"
+
+step() { echo; echo "=== [$1] $2 ==="; }
+cleanup() { docker rm -f "${CONTAINER}" >/dev/null 2>&1 || true; }
+trap cleanup EXIT
+
+step 1/4 "全工作区 typecheck / lint / test / build（含 admin user-mgmt jsdom 单测）"
+pnpm --filter @mall/api exec prisma migrate deploy
+pnpm --filter @mall/api exec prisma generate
+if [[ -z "${SKIP_PIPELINE}" ]]; then
+  pnpm typecheck && pnpm lint && pnpm test && pnpm build
+else
+  echo "  ⤿ SKIP_PIPELINE=1，跳过 typecheck/lint/test/build"
+fi
+
+step 2/4 "构建镜像 + 启容器 + 准备租户"
+docker build -f "${ROOT}/apps/api/Dockerfile" --target runner -t "${IMAGE_TAG}" "${ROOT}"
+${PSQL_CMD} <<SQL >/dev/null
+INSERT INTO "Tenant" (id, name) VALUES (${TENANT_ID}, 'm28-acc')
+  ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name;
+DELETE FROM "CartItem" WHERE "tenantId" = ${TENANT_ID};
+DELETE FROM "OrderItem" WHERE "orderId" IN (SELECT id FROM "Order" WHERE "tenantId" = ${TENANT_ID});
+DELETE FROM "Order" WHERE "tenantId" = ${TENANT_ID};
+DELETE FROM "User" WHERE "tenantId" = ${TENANT_ID};
+DELETE FROM "PlatformAdmin";
+SQL
+
+docker run -d \
+  --name "${CONTAINER}" \
+  --add-host=host.docker.internal:host-gateway \
+  -e DATABASE_URL="postgresql://mall:mall@host.docker.internal:5432/mall?schema=public" \
+  -e DATABASE_APP_URL="postgresql://mall_app:mall_app@host.docker.internal:5432/mall?schema=public" \
+  -e REDIS_URL="redis://host.docker.internal:6379/0" \
+  -e JWT_SECRET="${JWT_SECRET}" \
+  -e PAYMENT_MOCK_SECRET="${PAYMENT_MOCK_SECRET}" \
+  -e PLATFORM_ADMIN_EMAIL="${PLATFORM_ADMIN_EMAIL}" \
+  -e PLATFORM_ADMIN_PASSWORD="${PLATFORM_ADMIN_PASSWORD}" \
+  -e AUTH_RATE_LIMIT_MAX=200 \
+  -e NODE_ENV=production \
+  -e LOG_LEVEL=info \
+  -p "${HOST_PORT}:3000" \
+  "${IMAGE_TAG}" >/dev/null
+
+for i in $(seq 1 40); do
+  curl -sf "http://127.0.0.1:${HOST_PORT}/healthz" >/dev/null && break
+  sleep 1
+  [[ "${i}" == "40" ]] && { echo "timeout"; docker logs "${CONTAINER}"; exit 1; }
+done
+
+step 3/4 "造 user → platform GET /admin/users 列表能看到（不含 passwordHash）"
+reg=$(curl -sf -X POST "http://127.0.0.1:${HOST_PORT}/auth/register" \
+  -H 'content-type: application/json' \
+  -d "{\"tenantId\":${TENANT_ID},\"email\":\"${USER}\",\"password\":\"${PW}\"}")
+uid=$(echo "${reg}" | sed -n 's/.*"user":{"id":\([0-9]*\).*/\1/p' | head -1)
+
+plat=$(curl -sf -X POST "http://127.0.0.1:${HOST_PORT}/admin/auth/login" \
+  -H 'content-type: application/json' \
+  -d "{\"email\":\"${PLATFORM_ADMIN_EMAIL}\",\"password\":\"${PLATFORM_ADMIN_PASSWORD}\"}")
+ptoken=$(echo "${plat}" | sed -n 's/.*"accessToken":"\([^"]*\)".*/\1/p')
+
+list=$(curl -sf "http://127.0.0.1:${HOST_PORT}/admin/users?tenantId=${TENANT_ID}" \
+  -H "authorization: Bearer ${ptoken}")
+echo "${list}" | grep -q "\"id\":${uid}" || { echo "user not in list: ${list}" >&2; exit 1; }
+echo "${list}" | grep -q "\"locked\":false" || { echo "expected locked=false: ${list}" >&2; exit 1; }
+echo "${list}" | grep -q "passwordHash" && { echo "passwordHash leaked: ${list}" >&2; exit 1; }
+echo "  ✓ /admin/users 含 user #${uid}（locked=false，无 passwordHash）"
+
+step 4/4 "PATCH /admin/users/:id/lock → user login 401 → unlock → login 200"
+locked=$(curl -sf -X PATCH "http://127.0.0.1:${HOST_PORT}/admin/users/${uid}/lock" \
+  -H "authorization: Bearer ${ptoken}" -H 'content-type: application/json' \
+  -d '{"locked":true}')
+echo "${locked}" | grep -q '"locked":true' || { echo "lock failed: ${locked}" >&2; exit 1; }
+
+code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+  "http://127.0.0.1:${HOST_PORT}/auth/login" \
+  -H 'content-type: application/json' \
+  -d "{\"tenantId\":${TENANT_ID},\"email\":\"${USER}\",\"password\":\"${PW}\"}")
+[[ "${code}" == "401" ]] || { echo "expected 401 for locked, got ${code}" >&2; exit 1; }
+echo "  ✓ locked user 登录返回 401"
+
+unlocked=$(curl -sf -X PATCH "http://127.0.0.1:${HOST_PORT}/admin/users/${uid}/lock" \
+  -H "authorization: Bearer ${ptoken}" -H 'content-type: application/json' \
+  -d '{"locked":false}')
+echo "${unlocked}" | grep -q '"locked":false' || { echo "unlock failed: ${unlocked}" >&2; exit 1; }
+
+code2=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+  "http://127.0.0.1:${HOST_PORT}/auth/login" \
+  -H 'content-type: application/json' \
+  -d "{\"tenantId\":${TENANT_ID},\"email\":\"${USER}\",\"password\":\"${PW}\"}")
+[[ "${code2}" == "200" ]] || { echo "expected 200 after unlock, got ${code2}" >&2; exit 1; }
+echo "  ✓ unlock 后 user 登录恢复 200"
+
+echo
+echo "✅ M28 验收冒烟全部通过"

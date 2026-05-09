@@ -254,6 +254,63 @@ describe('Admin BFF (e2e)', () => {
     expect(r.statusCode).toBe(404)
   })
 
+  it('GET /admin/users + PATCH /admin/users/:id/lock + locked login 401', async () => {
+    await ensureTenants(owner, [205])
+    await registerAndLogin(app, {
+      tenantId: 205,
+      email: 'lockme@t205.dev',
+      password: 'p@ssw0rd!',
+      role: 'user',
+    })
+    // 列表能看到这个 user
+    const list = await app.inject({
+      method: 'GET',
+      url: '/admin/users?tenantId=205&email=lockme',
+      headers: bearer(platformToken),
+    })
+    expect(list.statusCode).toBe(200)
+    const body = list.json() as {
+      items: { id: number; email: string; locked: boolean; passwordHash?: unknown }[]
+    }
+    expect(body.items.length).toBe(1)
+    expect(body.items[0]?.locked).toBe(false)
+    expect(body.items[0]).not.toHaveProperty('passwordHash')
+    const userId = body.items[0]!.id
+
+    // lock
+    const locked = await app.inject({
+      method: 'PATCH',
+      url: `/admin/users/${userId}/lock`,
+      headers: bearer(platformToken),
+      payload: { locked: true },
+    })
+    expect(locked.statusCode).toBe(200)
+    expect((locked.json() as { locked: boolean }).locked).toBe(true)
+
+    // locked 用户重新登录 → 401
+    const login = await app.inject({
+      method: 'POST',
+      url: '/auth/login',
+      payload: { tenantId: 205, email: 'lockme@t205.dev', password: 'p@ssw0rd!' },
+    })
+    expect(login.statusCode).toBe(401)
+
+    // unlock 后能再登录
+    const unlocked = await app.inject({
+      method: 'PATCH',
+      url: `/admin/users/${userId}/lock`,
+      headers: bearer(platformToken),
+      payload: { locked: false },
+    })
+    expect(unlocked.statusCode).toBe(200)
+    const reLogin = await app.inject({
+      method: 'POST',
+      url: '/auth/login',
+      payload: { tenantId: 205, email: 'lockme@t205.dev', password: 'p@ssw0rd!' },
+    })
+    expect(reLogin.statusCode).toBe(200)
+  })
+
   it('rejects deleting a tenant that still has data (409)', async () => {
     // 先建一个并塞个 user
     await ensureTenants(owner, [201])

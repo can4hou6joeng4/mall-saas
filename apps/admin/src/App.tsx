@@ -5,6 +5,7 @@ import { TenantDetailPage } from './pages/TenantDetailPage.js'
 import { OrdersPage } from './pages/OrdersPage.js'
 import { PaymentsPage } from './pages/PaymentsPage.js'
 import { PaymentDetailPage } from './pages/PaymentDetailPage.js'
+import { UsersPage } from './pages/UsersPage.js'
 import { clearToken, getToken } from './api/client.js'
 
 function ProtectedShell() {
@@ -22,6 +23,9 @@ function ProtectedShell() {
           </NavLink>
           <NavLink to="/payments" className={({ isActive }) => (isActive ? 'active' : '')}>
             Payments
+          </NavLink>
+          <NavLink to="/users" className={({ isActive }) => (isActive ? 'active' : '')}>
+            Users
           </NavLink>
         </nav>
         <button
@@ -42,6 +46,7 @@ function ProtectedShell() {
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
           <Route path="/payments/:id" element={<PaymentDetailPage />} />
+          <Route path="/users" element={<UsersPage />} />
           <Route path="*" element={<Navigate to="/tenants" replace />} />
         </Routes>
       </main>
