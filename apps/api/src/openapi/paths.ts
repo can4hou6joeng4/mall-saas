@@ -637,6 +637,20 @@ registry.registerPath({
     ...errorResponses,
   },
 })
+registry.registerPath({
+  method: 'get',
+  path: '/admin/payments/{id}',
+  tags: ['admin'],
+  security: platformSecurity,
+  request: { params: z.object({ id: z.coerce.number().int().positive() }) },
+  responses: {
+    '200': {
+      description: 'Payment detail with related order(items) and tenant',
+      content: { 'application/json': { schema: schemaRefs.paymentDetail } },
+    },
+    ...errorResponses,
+  },
+})
 
 // Store BFF (商家后台，tenant-scoped admin role)
 registry.registerPath({

@@ -176,6 +176,19 @@ const paymentSchema = z
 registry.register('Payment', paymentSchema)
 registry.register('PayOrderRequest', payOrderSchema.openapi('PayOrderRequest'))
 
+// Admin payment 详情：payment + 关联 order(items) + 关联 tenant
+const paymentDetailSchema = paymentSchema
+  .extend({
+    order: orderSchema,
+    tenant: z.object({
+      id: z.number().int(),
+      name: z.string(),
+      createdAt: z.string().datetime(),
+    }),
+  })
+  .openapi('PaymentDetail')
+registry.register('PaymentDetail', paymentDetailSchema)
+
 // Admin
 const tenantSchema = z
   .object({
@@ -262,6 +275,7 @@ export const schemaRefs = {
   payment: paymentSchema,
   tenant: tenantSchema,
   tenantDetail: tenantDetailSchema,
+  paymentDetail: paymentDetailSchema,
   storeOrderDetail: storeOrderDetailSchema,
   coupon: couponSchema,
 }

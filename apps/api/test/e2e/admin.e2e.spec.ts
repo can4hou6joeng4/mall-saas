@@ -187,6 +187,73 @@ describe('Admin BFF (e2e)', () => {
     expect(r.statusCode).toBe(404)
   })
 
+  it('GET /admin/payments/:id returns payment + order(items) + tenant', async () => {
+    // 在新租户里造一笔订单 + payment（mock provider）
+    await ensureTenants(owner, [204])
+    const aToken = await registerAndLogin(app, {
+      tenantId: 204,
+      email: 'a@t204.dev',
+      password: 'p@ssw0rd!',
+      role: 'admin',
+    })
+    const uToken = await registerAndLogin(app, {
+      tenantId: 204,
+      email: 'u@t204.dev',
+      password: 'p@ssw0rd!',
+      role: 'user',
+    })
+    const prod = await app.inject({
+      method: 'POST',
+      url: '/products',
+      headers: bearer(aToken),
+      payload: { name: 't204-sku', priceCents: 1500, stock: 5 },
+    })
+    const productId = (prod.json() as { id: number }).id
+    const order = await app.inject({
+      method: 'POST',
+      url: '/orders',
+      headers: bearer(uToken),
+      payload: { items: [{ productId, quantity: 2 }] },
+    })
+    const orderId = (order.json() as { id: number }).id
+    const pay = await app.inject({
+      method: 'POST',
+      url: `/orders/${orderId}/pay`,
+      headers: bearer(uToken),
+      payload: { provider: 'mock' },
+    })
+    const paymentId = (pay.json() as { id: number }).id
+
+    const r = await app.inject({
+      method: 'GET',
+      url: `/admin/payments/${paymentId}`,
+      headers: bearer(platformToken),
+    })
+    expect(r.statusCode).toBe(200)
+    const body = r.json() as {
+      id: number
+      orderId: number
+      providerName: string
+      order: { id: number; items: { productId: number }[] }
+      tenant: { id: number; name: string }
+    }
+    expect(body.id).toBe(paymentId)
+    expect(body.orderId).toBe(orderId)
+    expect(body.providerName).toBe('mock')
+    expect(body.order.id).toBe(orderId)
+    expect(body.order.items[0]?.productId).toBe(productId)
+    expect(body.tenant.id).toBe(204)
+  })
+
+  it('GET /admin/payments/:id 404 for unknown id', async () => {
+    const r = await app.inject({
+      method: 'GET',
+      url: '/admin/payments/999999',
+      headers: bearer(platformToken),
+    })
+    expect(r.statusCode).toBe(404)
+  })
+
   it('rejects deleting a tenant that still has data (409)', async () => {
     // 先建一个并塞个 user
     await ensureTenants(owner, [201])

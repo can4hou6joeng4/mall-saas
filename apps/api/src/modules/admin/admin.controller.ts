@@ -86,4 +86,9 @@ export class AdminController {
   ) {
     return this.admin.listPayments(query)
   }
+
+  @Get('payments/:id')
+  findPayment(@Param('id', ParseIntPipe) id: number) {
+    return this.admin.findPaymentDetail(id)
+  }
 }

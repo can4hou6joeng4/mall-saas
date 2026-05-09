@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ApiError, api } from '../api/client.js'
 
@@ -59,7 +60,9 @@ export function PaymentsPage() {
               <tbody>
                 {paymentsQuery.data.items.map((p) => (
                   <tr key={p.id}>
-                    <td>{p.id}</td>
+                    <td>
+                      <Link to={`/payments/${p.id}`}>#{p.id}</Link>
+                    </td>
                     <td>{p.tenantId}</td>
                     <td>{p.orderId}</td>
                     <td>{p.providerName}</td>

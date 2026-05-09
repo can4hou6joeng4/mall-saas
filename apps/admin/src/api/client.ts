@@ -5,6 +5,7 @@ export type Tenant = components['schemas']['Tenant']
 export type TenantDetail = components['schemas']['TenantDetail']
 export type Order = components['schemas']['Order']
 export type Payment = components['schemas']['Payment']
+export type PaymentDetail = components['schemas']['PaymentDetail']
 export type ErrorResponse = components['schemas']['ErrorResponse']
 
 interface PaginatedList<T> {
@@ -111,6 +112,9 @@ export const api = {
     status?: string
   }): Promise<PaginatedList<Payment>> {
     return apiRequest('/admin/payments', { query })
+  },
+  getPayment(id: number): Promise<PaymentDetail> {
+    return apiRequest(`/admin/payments/${id}`)
   },
 }
 

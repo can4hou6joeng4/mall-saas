@@ -119,4 +119,18 @@ export class AdminService {
     ])
     return { items, total, page, pageSize }
   }
+
+  // 平台运营排查异常支付：payment + 关联 order(含 items) + 关联 tenant
+  async findPaymentDetail(id: number) {
+    const sys = this.prisma.getSuperuserClient()
+    const payment = await sys.payment.findUnique({
+      where: { id },
+      include: {
+        order: { include: { items: true } },
+        tenant: { select: { id: true, name: true, createdAt: true } },
+      },
+    })
+    if (!payment) throw new NotFoundException(`payment ${id} not found`)
+    return payment
+  }
 }
