@@ -130,6 +130,9 @@ export const api = {
   setUserLocked(id: number, locked: boolean): Promise<AdminUser> {
     return apiRequest(`/admin/users/${id}/lock`, { method: 'PATCH', body: { locked } })
   },
+  resetUserPassword(id: number): Promise<{ user: AdminUser; temporaryPassword: string }> {
+    return apiRequest(`/admin/users/${id}/reset-password`, { method: 'POST' })
+  },
 }
 
 export type { PaginatedList }

@@ -110,4 +110,10 @@ export class AdminController {
   ) {
     return this.admin.setUserLocked(id, dto.locked)
   }
+
+  @Post('users/:id/reset-password')
+  @HttpCode(200)
+  resetUserPassword(@Param('id', ParseIntPipe) id: number) {
+    return this.admin.resetUserPassword(id)
+  }
 }

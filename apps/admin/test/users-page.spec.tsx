@@ -101,4 +101,33 @@ describe('admin UsersPage', () => {
       expect(lockPayload).toMatchObject({ body: { locked: true } }),
     )
   })
+
+  it('clicking 重置密码 confirms + shows one-time password', async () => {
+    vi.stubGlobal('confirm', vi.fn(() => true))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: FetchInit) => {
+        if (url.includes('/admin/users/1/reset-password') && init?.method === 'POST') {
+          return new Response(
+            JSON.stringify({
+              user: SAMPLE_USERS[0],
+              temporaryPassword: 'TmpPw_abc123XY',
+            }),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          )
+        }
+        return new Response(
+          JSON.stringify({ items: SAMPLE_USERS, total: 2, page: 1, pageSize: 50 }),
+          { status: 200, headers: { 'content-type': 'application/json' } },
+        )
+      }),
+    )
+    render(withProviders(<UsersPage />))
+    await waitFor(() => expect(screen.getByText('a@example.com')).toBeInTheDocument())
+    // a@example.com 那行的"重置密码"
+    const resetButtons = screen.getAllByRole('button', { name: '重置密码' })
+    fireEvent.click(resetButtons[0]!)
+    await waitFor(() => expect(screen.getByText('TmpPw_abc123XY')).toBeInTheDocument())
+    expect(screen.getByText('临时密码已生成', { exact: false })).toBeInTheDocument()
+  })
 })

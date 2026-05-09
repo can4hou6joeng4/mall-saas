@@ -3,7 +3,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
+import { randomBytes } from 'node:crypto'
 import { PrismaService } from '../../common/prisma/prisma.service.js'
+import { hashPassword } from '../../common/auth/password.js'
 import type {
   CreateTenantDto,
   ListOrdersAdminQuery,
@@ -182,5 +184,28 @@ export class AdminService {
         updatedAt: true,
       },
     })
+  }
+
+  // 一次性临时密码：随机 16 字节 → base64url 截 16 字符；写 hash 不存明文；
+  // 不解锁（lock 状态独立，避免 reset 绕过 lock）。
+  async resetUserPassword(id: number) {
+    const sys = this.prisma.getSuperuserClient()
+    const existing = await sys.user.findUnique({ where: { id } })
+    if (!existing) throw new NotFoundException(`user ${id} not found`)
+    const temporaryPassword = randomBytes(12).toString('base64url').slice(0, 16)
+    const user = await sys.user.update({
+      where: { id },
+      data: { passwordHash: hashPassword(temporaryPassword) },
+      select: {
+        id: true,
+        tenantId: true,
+        email: true,
+        role: true,
+        locked: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
+    return { user, temporaryPassword }
   }
 }

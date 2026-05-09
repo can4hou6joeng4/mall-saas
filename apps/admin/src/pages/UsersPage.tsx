@@ -29,6 +29,17 @@ export function UsersPage() {
     },
   })
 
+  const [resetResult, setResetResult] = useState<{
+    email: string
+    temporaryPassword: string
+  } | null>(null)
+  const resetMutation = useMutation({
+    mutationFn: (id: number) => api.resetUserPassword(id),
+    onSuccess: (res) => {
+      setResetResult({ email: res.user.email, temporaryPassword: res.temporaryPassword })
+    },
+  })
+
   return (
     <div className="col">
       <div className="panel">
@@ -68,6 +79,28 @@ export function UsersPage() {
         {lockMutation.error instanceof ApiError && (
           <div className="error">操作失败：{lockMutation.error.message}</div>
         )}
+        {resetMutation.error instanceof ApiError && (
+          <div className="error">重置失败：{resetMutation.error.message}</div>
+        )}
+        {resetResult && (
+          <div
+            className="panel"
+            role="dialog"
+            aria-label="临时密码"
+            style={{ borderLeft: '3px solid #f5a623', marginTop: 12 }}
+          >
+            <p>
+              <strong>临时密码已生成</strong>（仅显示一次，请通过安全渠道转交后立即关闭）
+            </p>
+            <p>
+              账号：<code>{resetResult.email}</code>
+            </p>
+            <p>
+              临时密码：<code>{resetResult.temporaryPassword}</code>
+            </p>
+            <button onClick={() => setResetResult(null)}>我已记下，关闭</button>
+          </div>
+        )}
         {usersQuery.data && (
           <>
             <p className="muted">共 {usersQuery.data.total} 人</p>
@@ -105,6 +138,18 @@ export function UsersPage() {
                         disabled={lockMutation.isPending}
                       >
                         {u.locked ? '解锁' : '锁定'}
+                      </button>
+                      <button
+                        className="secondary"
+                        style={{ marginLeft: 8 }}
+                        onClick={() => {
+                          if (window.confirm(`重置 ${u.email} 的密码？旧密码立即失效`)) {
+                            resetMutation.mutate(u.id)
+                          }
+                        }}
+                        disabled={resetMutation.isPending}
+                      >
+                        重置密码
                       </button>
                     </td>
                   </tr>

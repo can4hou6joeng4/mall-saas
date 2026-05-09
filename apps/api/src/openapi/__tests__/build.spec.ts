@@ -36,6 +36,7 @@ const expectedPaths = [
   '/admin/payments/{id}',
   '/admin/users',
   '/admin/users/{id}/lock',
+  '/admin/users/{id}/reset-password',
 ]
 
 const expectedSchemas = [

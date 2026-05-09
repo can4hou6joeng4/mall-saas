@@ -311,6 +311,62 @@ describe('Admin BFF (e2e)', () => {
     expect(reLogin.statusCode).toBe(200)
   })
 
+  it('POST /admin/users/:id/reset-password 旧密码失效 + 新临时密码可登录', async () => {
+    await ensureTenants(owner, [206])
+    await registerAndLogin(app, {
+      tenantId: 206,
+      email: 'reset@t206.dev',
+      password: 'old-passw0rd!',
+      role: 'user',
+    })
+    const list = await app.inject({
+      method: 'GET',
+      url: '/admin/users?tenantId=206&email=reset',
+      headers: bearer(platformToken),
+    })
+    const items = (list.json() as { items: { id: number }[] }).items
+    const userId = items[0]!.id
+
+    const reset = await app.inject({
+      method: 'POST',
+      url: `/admin/users/${userId}/reset-password`,
+      headers: bearer(platformToken),
+    })
+    expect(reset.statusCode).toBe(200)
+    const body = reset.json() as { user: { id: number }; temporaryPassword: string }
+    expect(body.user.id).toBe(userId)
+    expect(body.temporaryPassword.length).toBeGreaterThanOrEqual(12)
+
+    // 旧密码失效
+    const oldLogin = await app.inject({
+      method: 'POST',
+      url: '/auth/login',
+      payload: { tenantId: 206, email: 'reset@t206.dev', password: 'old-passw0rd!' },
+    })
+    expect(oldLogin.statusCode).toBe(401)
+
+    // 新临时密码可登录
+    const newLogin = await app.inject({
+      method: 'POST',
+      url: '/auth/login',
+      payload: {
+        tenantId: 206,
+        email: 'reset@t206.dev',
+        password: body.temporaryPassword,
+      },
+    })
+    expect(newLogin.statusCode).toBe(200)
+  })
+
+  it('POST /admin/users/:id/reset-password 404 for unknown id', async () => {
+    const r = await app.inject({
+      method: 'POST',
+      url: '/admin/users/999999/reset-password',
+      headers: bearer(platformToken),
+    })
+    expect(r.statusCode).toBe(404)
+  })
+
   it('rejects deleting a tenant that still has data (409)', async () => {
     // 先建一个并塞个 user
     await ensureTenants(owner, [201])

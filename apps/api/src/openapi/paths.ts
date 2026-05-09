@@ -700,6 +700,27 @@ registry.registerPath({
     ...errorResponses,
   },
 })
+registry.registerPath({
+  method: 'post',
+  path: '/admin/users/{id}/reset-password',
+  tags: ['admin'],
+  security: platformSecurity,
+  request: { params: z.object({ id: z.coerce.number().int().positive() }) },
+  responses: {
+    '200': {
+      description: 'One-time temporary password (caller must transmit out-of-band)',
+      content: {
+        'application/json': {
+          schema: z.object({
+            user: schemaRefs.adminUser,
+            temporaryPassword: z.string(),
+          }),
+        },
+      },
+    },
+    ...errorResponses,
+  },
+})
 
 // Store BFF (商家后台，tenant-scoped admin role)
 registry.registerPath({
