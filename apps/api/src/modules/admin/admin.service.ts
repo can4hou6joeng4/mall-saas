@@ -31,6 +31,41 @@ export class AdminService {
     return sys.tenant.update({ where: { id }, data: { name: dto.name } })
   }
 
+  // 平台运营视角的租户健康度详情：元数据 + 订单状态分桶 + 商品/用户计数 + paid 订单累计营收
+  async findTenantDetail(id: number) {
+    const sys = this.prisma.getSuperuserClient()
+    const tenant = await sys.tenant.findUnique({ where: { id } })
+    if (!tenant) throw new NotFoundException(`tenant ${id} not found`)
+    const [grouped, productCount, userCount, paidAggregate] = await Promise.all([
+      sys.order.groupBy({
+        by: ['status'],
+        where: { tenantId: id },
+        _count: { _all: true },
+        _sum: { totalCents: true },
+      }),
+      sys.product.count({ where: { tenantId: id } }),
+      sys.user.count({ where: { tenantId: id } }),
+      sys.order.aggregate({
+        where: { tenantId: id, status: 'paid' },
+        _sum: { totalCents: true },
+      }),
+    ])
+    const ordersByStatus: Record<string, { count: number; totalCents: number }> = {}
+    for (const row of grouped) {
+      ordersByStatus[row.status] = {
+        count: row._count._all,
+        totalCents: row._sum.totalCents ?? 0,
+      }
+    }
+    return {
+      ...tenant,
+      ordersByStatus,
+      productCount,
+      userCount,
+      paidRevenueCents: paidAggregate._sum.totalCents ?? 0,
+    }
+  }
+
   async deleteTenant(id: number): Promise<void> {
     const sys = this.prisma.getSuperuserClient()
     const existing = await sys.tenant.findUnique({ where: { id } })

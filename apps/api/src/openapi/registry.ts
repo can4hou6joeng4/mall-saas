@@ -185,6 +185,18 @@ const tenantSchema = z
   })
   .openapi('Tenant')
 registry.register('Tenant', tenantSchema)
+const tenantDetailSchema = tenantSchema
+  .extend({
+    ordersByStatus: z.record(
+      z.string(),
+      z.object({ count: z.number().int(), totalCents: z.number().int() }),
+    ),
+    productCount: z.number().int(),
+    userCount: z.number().int(),
+    paidRevenueCents: z.number().int(),
+  })
+  .openapi('TenantDetail')
+registry.register('TenantDetail', tenantDetailSchema)
 registry.register('AdminLoginRequest', adminLoginSchema.openapi('AdminLoginRequest'))
 registry.register('CreateTenantRequest', createTenantSchema.openapi('CreateTenantRequest'))
 registry.register('UpdateTenantRequest', updateTenantSchema.openapi('UpdateTenantRequest'))
@@ -249,6 +261,7 @@ export const schemaRefs = {
   order: orderSchema,
   payment: paymentSchema,
   tenant: tenantSchema,
+  tenantDetail: tenantDetailSchema,
   storeOrderDetail: storeOrderDetailSchema,
   coupon: couponSchema,
 }

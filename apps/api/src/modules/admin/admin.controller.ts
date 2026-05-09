@@ -49,6 +49,11 @@ export class AdminController {
     return this.admin.listTenants()
   }
 
+  @Get('tenants/:id')
+  findTenant(@Param('id', ParseIntPipe) id: number) {
+    return this.admin.findTenantDetail(id)
+  }
+
   @Post('tenants')
   createTenant(@Body(new ZodValidationPipe(createTenantSchema)) dto: CreateTenantDto) {
     return this.admin.createTenant(dto)

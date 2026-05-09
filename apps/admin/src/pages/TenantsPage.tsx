@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiError, api } from '../api/client.js'
 
@@ -60,7 +61,9 @@ export function TenantsPage() {
             <tbody>
               {tenantsQuery.data.map((t) => (
                 <tr key={t.id}>
-                  <td>{t.id}</td>
+                  <td>
+                    <Link to={`/tenants/${t.id}`}>#{t.id}</Link>
+                  </td>
                   <td>{t.name}</td>
                   <td className="muted">{t.createdAt}</td>
                 </tr>

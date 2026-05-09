@@ -536,6 +536,20 @@ registry.registerPath({
   },
 })
 registry.registerPath({
+  method: 'get',
+  path: '/admin/tenants/{id}',
+  tags: ['admin'],
+  security: platformSecurity,
+  request: { params: z.object({ id: z.coerce.number().int().positive() }) },
+  responses: {
+    '200': {
+      description: 'Tenant detail with orders/products/users aggregates',
+      content: { 'application/json': { schema: schemaRefs.tenantDetail } },
+    },
+    ...errorResponses,
+  },
+})
+registry.registerPath({
   method: 'post',
   path: '/admin/tenants',
   tags: ['admin'],

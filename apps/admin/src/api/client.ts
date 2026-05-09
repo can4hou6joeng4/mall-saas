@@ -2,6 +2,7 @@ import type { components } from './types.gen.js'
 
 export type AuthResult = components['schemas']['AuthResult']
 export type Tenant = components['schemas']['Tenant']
+export type TenantDetail = components['schemas']['TenantDetail']
 export type Order = components['schemas']['Order']
 export type Payment = components['schemas']['Payment']
 export type ErrorResponse = components['schemas']['ErrorResponse']
@@ -88,6 +89,9 @@ export const api = {
   },
   listTenants(): Promise<Tenant[]> {
     return apiRequest('/admin/tenants')
+  },
+  getTenant(id: number): Promise<TenantDetail> {
+    return apiRequest(`/admin/tenants/${id}`)
   },
   createTenant(name: string): Promise<Tenant> {
     return apiRequest('/admin/tenants', { method: 'POST', body: { name } })

@@ -1,6 +1,7 @@
 import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom'
 import { LoginPage } from './pages/LoginPage.js'
 import { TenantsPage } from './pages/TenantsPage.js'
+import { TenantDetailPage } from './pages/TenantDetailPage.js'
 import { OrdersPage } from './pages/OrdersPage.js'
 import { PaymentsPage } from './pages/PaymentsPage.js'
 import { clearToken, getToken } from './api/client.js'
@@ -36,6 +37,7 @@ function ProtectedShell() {
         <Routes>
           <Route path="/" element={<Navigate to="/tenants" replace />} />
           <Route path="/tenants" element={<TenantsPage />} />
+          <Route path="/tenants/:id" element={<TenantDetailPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
           <Route path="*" element={<Navigate to="/tenants" replace />} />

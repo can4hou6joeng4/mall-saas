@@ -680,6 +680,51 @@
           "createdAt"
         ]
       },
+      "TenantDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Tenant"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ordersByStatus": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer"
+                    },
+                    "totalCents": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "totalCents"
+                  ]
+                }
+              },
+              "productCount": {
+                "type": "integer"
+              },
+              "userCount": {
+                "type": "integer"
+              },
+              "paidRevenueCents": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "ordersByStatus",
+              "productCount",
+              "userCount",
+              "paidRevenueCents"
+            ]
+          }
+        ]
+      },
       "AdminLoginRequest": {
         "type": "object",
         "properties": {
@@ -3621,6 +3666,90 @@
       }
     },
     "/admin/tenants/{id}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant detail with orders/products/users aggregates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
       "patch": {
         "tags": [
           "admin"

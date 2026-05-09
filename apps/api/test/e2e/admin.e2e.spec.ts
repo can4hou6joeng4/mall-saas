@@ -128,6 +128,65 @@ describe('Admin BFF (e2e)', () => {
     expect((renamed.json() as { name: string }).name).toBe('Initech Renamed')
   })
 
+  it('GET /admin/tenants/:id returns aggregated tenant detail', async () => {
+    // 在 tenantId=200/202 之外造一个新租户并塞数据
+    await ensureTenants(owner, [203])
+    const aToken = await registerAndLogin(app, {
+      tenantId: 203,
+      email: 'a@t203.dev',
+      password: 'p@ssw0rd!',
+      role: 'admin',
+    })
+    const uToken = await registerAndLogin(app, {
+      tenantId: 203,
+      email: 'u@t203.dev',
+      password: 'p@ssw0rd!',
+      role: 'user',
+    })
+    const prod = await app.inject({
+      method: 'POST',
+      url: '/products',
+      headers: bearer(aToken),
+      payload: { name: 't203-sku', priceCents: 1000, stock: 5 },
+    })
+    const productId = (prod.json() as { id: number }).id
+    await app.inject({
+      method: 'POST',
+      url: '/orders',
+      headers: bearer(uToken),
+      payload: { items: [{ productId, quantity: 1 }] },
+    })
+
+    const r = await app.inject({
+      method: 'GET',
+      url: '/admin/tenants/203',
+      headers: bearer(platformToken),
+    })
+    expect(r.statusCode).toBe(200)
+    const body = r.json() as {
+      id: number
+      name: string
+      ordersByStatus: Record<string, { count: number; totalCents: number }>
+      productCount: number
+      userCount: number
+      paidRevenueCents: number
+    }
+    expect(body.id).toBe(203)
+    expect(body.productCount).toBeGreaterThanOrEqual(1)
+    expect(body.userCount).toBeGreaterThanOrEqual(2) // admin + user
+    expect(body.ordersByStatus['pending']?.count ?? 0).toBeGreaterThanOrEqual(1)
+    expect(body.paidRevenueCents).toBe(0) // 没有 paid 订单
+  })
+
+  it('GET /admin/tenants/:id 404 for unknown id', async () => {
+    const r = await app.inject({
+      method: 'GET',
+      url: '/admin/tenants/999999',
+      headers: bearer(platformToken),
+    })
+    expect(r.statusCode).toBe(404)
+  })
+
   it('rejects deleting a tenant that still has data (409)', async () => {
     // 先建一个并塞个 user
     await ensureTenants(owner, [201])
