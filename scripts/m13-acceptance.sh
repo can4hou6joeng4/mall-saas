@@ -141,7 +141,7 @@ code=$(curl -s -o /tmp/m13-resp -w '%{http_code}' -X POST \
 }
 
 step 7/7 "断言 order.paid + stock 真扣 + reservedStock 归零"
-read stock reserved <<< $(docker exec -i mall-postgres psql -U mall -d mall -tAc \
+read -r stock reserved < <(docker exec -i mall-postgres psql -U mall -d mall -tAc \
   "SELECT stock || ' ' || \"reservedStock\" FROM \"Product\" WHERE id = ${pid};")
 [[ "${stock}" == "1" && "${reserved}" == "0" ]] || {
   echo "expected stock=1/reserved=0 got stock=${stock} reserved=${reserved}" >&2

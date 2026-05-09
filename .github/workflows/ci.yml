@@ -11,6 +11,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  shellcheck:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellcheck on scripts/*.sh
+        run: |
+          set -euo pipefail
+          # ubuntu-24.04 自带 shellcheck，无需额外安装
+          shellcheck --version | head -1
+          shopt -s nullglob
+          mapfile -t files < <(find scripts -maxdepth 2 -type f -name '*.sh' | sort)
+          [[ "${#files[@]}" -gt 0 ]] || { echo "no scripts/*.sh found"; exit 1; }
+          # SC2064: cleanup() trap 在脚本里展开 PSQL_CMD 是有意行为；其他常见 false-positive 用 -e 关闭
+          shellcheck -e SC2064,SC2155 "${files[@]}"
+
   build-test:
     runs-on: ubuntu-24.04
     services:
@@ -49,6 +64,13 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - name: Cache turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @mall/api exec prisma migrate deploy
       - run: pnpm --filter @mall/api exec prisma generate
@@ -167,3 +189,56 @@ jobs:
       - name: Dump container logs on failure
         if: failure()
         run: docker logs mall-api-ci || true
+
+  acceptance-smoke:
+    # 跑最近一个验收脚本（M21 端到端：order detail + coupon 生命周期）
+    # 通过 PSQL_CMD + SKIP_PIPELINE 旋钮复用 scripts/m21-acceptance.sh，避免与 build-test 重复跑 pipeline
+    runs-on: ubuntu-24.04
+    needs: build-test
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: mall
+          POSTGRES_PASSWORD: mall
+          POSTGRES_DB: mall
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U mall -d mall"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    env:
+      DATABASE_URL: postgresql://mall:mall@localhost:5432/mall?schema=public
+      DATABASE_APP_URL: postgresql://mall_app:mall_app@localhost:5432/mall?schema=public
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET: ci-acceptance-jwt-secret-must-be-at-least-thirty-two-chars
+      PAYMENT_MOCK_SECRET: ci-acceptance-mock-secret
+      PLATFORM_ADMIN_EMAIL: platform@ci-acceptance.dev
+      PLATFORM_ADMIN_PASSWORD: ci-acceptance-pw
+      PGPASSWORD: mall
+      PSQL_CMD: psql -h 127.0.0.1 -U mall -d mall
+      SKIP_PIPELINE: "1"
+      HOST_PORT: "3021"
+      TENANT_ID: "9921"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - run: pnpm install --frozen-lockfile
+      - name: Run M21 acceptance script (skip pipeline)
+        run: bash scripts/m21-acceptance.sh
+      - name: Dump container logs on failure
+        if: failure()
+        run: docker logs mall-api-m21-smoke || true

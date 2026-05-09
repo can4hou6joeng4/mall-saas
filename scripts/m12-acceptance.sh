@@ -96,7 +96,7 @@ checkout=$(curl -sf -X POST "http://127.0.0.1:${HOST_PORT}/cart/checkout" \
   -H "authorization: Bearer ${user_token}")
 order_id=$(echo "${checkout}" | sed -n 's/.*"id":\([0-9]*\).*/\1/p' | head -1)
 
-read stock reserved <<< $(docker exec -i mall-postgres psql -U mall -d mall -tAc \
+read -r stock reserved < <(docker exec -i mall-postgres psql -U mall -d mall -tAc \
   "SELECT stock || ' ' || \"reservedStock\" FROM \"Product\" WHERE id = ${prod_id};")
 [[ "${stock}" == "5" && "${reserved}" == "3" ]] || {
   echo "after checkout expected stock=5/reserved=3 got stock=${stock} reserved=${reserved}" >&2
@@ -122,7 +122,7 @@ code=$(curl -s -o /dev/null -w '%{http_code}' -X POST \
   -d "${body}")
 [[ "${code}" == "200" ]] || { echo "webhook expected 200 got ${code}" >&2; exit 1; }
 
-read stock reserved <<< $(docker exec -i mall-postgres psql -U mall -d mall -tAc \
+read -r stock reserved < <(docker exec -i mall-postgres psql -U mall -d mall -tAc \
   "SELECT stock || ' ' || \"reservedStock\" FROM \"Product\" WHERE id = ${prod_id};")
 [[ "${stock}" == "2" && "${reserved}" == "0" ]] || {
   echo "after paid expected stock=2/reserved=0 got stock=${stock} reserved=${reserved}" >&2
@@ -144,7 +144,7 @@ order2=$(echo "${checkout}" | sed -n 's/.*"id":\([0-9]*\).*/\1/p' | head -1)
 curl -sf -X POST "http://127.0.0.1:${HOST_PORT}/orders/${order2}/cancel" \
   -H "authorization: Bearer ${user_token}" >/dev/null
 
-read stock reserved <<< $(docker exec -i mall-postgres psql -U mall -d mall -tAc \
+read -r stock reserved < <(docker exec -i mall-postgres psql -U mall -d mall -tAc \
   "SELECT stock || ' ' || \"reservedStock\" FROM \"Product\" WHERE id = ${prod_id};")
 [[ "${stock}" == "2" && "${reserved}" == "0" ]] || {
   echo "after cancel expected stock=2/reserved=0 got stock=${stock} reserved=${reserved}" >&2

@@ -25,6 +25,11 @@ USER="m21-user@example.com"
 PW="m21-acc-pw!"
 COUPON_CODE="M21SAVE"
 
+# 在 CI 中可用 PSQL_CMD="psql -h 127.0.0.1 -U mall -d mall"（PGPASSWORD=mall）替换 docker exec
+PSQL_CMD="${PSQL_CMD:-docker exec -i mall-postgres psql -U mall -d mall}"
+# 在 CI 中可设 SKIP_PIPELINE=1 跳过 typecheck/lint/test/build（前置 build-test job 已跑过）
+SKIP_PIPELINE="${SKIP_PIPELINE:-}"
+
 step() { echo; echo "=== [$1] $2 ==="; }
 cleanup() { docker rm -f "${CONTAINER}" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
@@ -32,11 +37,15 @@ trap cleanup EXIT
 step 1/5 "全工作区 typecheck / lint / test / build"
 pnpm --filter @mall/api exec prisma migrate deploy
 pnpm --filter @mall/api exec prisma generate
-pnpm typecheck && pnpm lint && pnpm test && pnpm build
+if [[ -z "${SKIP_PIPELINE}" ]]; then
+  pnpm typecheck && pnpm lint && pnpm test && pnpm build
+else
+  echo "  ⤿ SKIP_PIPELINE=1，跳过 typecheck/lint/test/build"
+fi
 
 step 2/5 "构建镜像 + 启容器 + 准备租户"
 docker build -f "${ROOT}/apps/api/Dockerfile" -t "${IMAGE_TAG}" "${ROOT}"
-docker exec -i mall-postgres psql -U mall -d mall <<SQL >/dev/null
+${PSQL_CMD} <<SQL >/dev/null
 INSERT INTO "Tenant" (id, name) VALUES (${TENANT_ID}, 'm21-acc') ON CONFLICT (id) DO NOTHING;
 DELETE FROM "ProductImage" WHERE "tenantId" = ${TENANT_ID};
 DELETE FROM "CartItem" WHERE "tenantId" = ${TENANT_ID};

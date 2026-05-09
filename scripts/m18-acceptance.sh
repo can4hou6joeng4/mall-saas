@@ -11,7 +11,8 @@ step 1/3 "类型检查 / Lint / vitest 单测 / 构建（含 admin 工作区）"
 pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 step 2/3 "确认 chromium 已安装"
-ls "${HOME}/Library/Caches/ms-playwright" 2>/dev/null | grep -q chromium- || {
+chromiums=("${HOME}/Library/Caches/ms-playwright/"chromium-*)
+[[ -e "${chromiums[0]}" ]] || {
   echo "chromium 未安装，请先在 apps/admin 执行 pnpm exec playwright install chromium" >&2
   exit 1
 }

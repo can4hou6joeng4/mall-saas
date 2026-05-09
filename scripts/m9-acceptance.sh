@@ -41,10 +41,12 @@ pnpm build
 step 4/7 "用 openapi.json 重新生成 admin 类型，确保契约一致"
 pnpm --filter @mall/api openapi:gen
 pnpm --filter @mall/admin openapi:types
-git diff --quiet apps/admin/src/api/types.gen.ts && echo "  ✓ admin 类型与最新 openapi.json 完全一致" || {
+if git diff --quiet apps/admin/src/api/types.gen.ts; then
+  echo "  ✓ admin 类型与最新 openapi.json 完全一致"
+else
   echo "admin types.gen.ts 与 openapi.json 不一致，请重新生成并提交" >&2
   exit 1
-}
+fi
 
 step 5/7 "构建 api 镜像并起容器"
 docker build -f "${ROOT}/apps/api/Dockerfile" -t "${IMAGE_TAG}" "${ROOT}"
