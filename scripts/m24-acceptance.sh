@@ -95,6 +95,7 @@ echo "  ✓ 非法 traceparent 不报 4xx"
 log_traces=$(docker logs "${CONTAINER}" 2>&1 | grep -o '"traceId":"[^"]*"' | head -3)
 [[ -n "${log_traces}" ]] || { echo "no traceId in container logs" >&2; exit 1; }
 echo "  ✓ 容器日志包含 traceId 字段："
+# shellcheck disable=SC2001  # multi-line indent via sed is clearer than parameter expansion
 echo "${log_traces}" | sed 's/^/      /'
 
 echo
