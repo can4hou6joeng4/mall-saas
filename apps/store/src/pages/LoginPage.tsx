@@ -1,6 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { ApiError, api, getToken, setTenantId, setToken } from '../api/client.js'
+import {
+  ApiError,
+  api,
+  getToken,
+  setRefreshToken,
+  setTenantId,
+  setToken,
+} from '../api/client.js'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -24,6 +31,7 @@ export function LoginPage() {
     try {
       const res = await api.login(tid, email, password)
       setToken(res.accessToken)
+      setRefreshToken(res.refreshToken)
       setTenantId(res.user.tenantId)
       navigate('/dashboard', { replace: true })
     } catch (err) {

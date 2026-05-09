@@ -4,6 +4,7 @@ import {
   ApiError,
   api,
   getToken,
+  setRefreshToken,
   setTenantId,
   setToken,
   setUserEmail,
@@ -35,6 +36,7 @@ export function LoginPage() {
           ? await api.register(tid, email, password)
           : await api.login(tid, email, password)
       setToken(res.accessToken)
+      setRefreshToken(res.refreshToken)
       setTenantId(res.user.tenantId)
       setUserEmail(res.user.email)
       navigate('/products', { replace: true })

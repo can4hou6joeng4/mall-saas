@@ -63,6 +63,10 @@ export async function apiRequest<T>(path: string, opts: RequestOptions = {}): Pr
   }
   if (opts.body !== undefined) init.body = JSON.stringify(opts.body)
   const res = await fetch(url.toString(), init)
+  if (res.status === 401 && !path.startsWith('/admin/auth/')) {
+    // platform 端无 refreshToken：直接清 token，下一次渲染由 ProtectedShell 跳回 /login
+    clearToken()
+  }
   if (res.status === 204) return undefined as T
   const text = await res.text()
   const parsed = text ? (JSON.parse(text) as unknown) : null
