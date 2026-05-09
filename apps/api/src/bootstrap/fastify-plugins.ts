@@ -6,6 +6,7 @@ import rateLimit from '@fastify/rate-limit'
 import multipart from '@fastify/multipart'
 import fastifyStatic from '@fastify/static'
 import { MetricsService } from '../common/metrics/metrics.service.js'
+import { attachSpanContext, formatTraceresponse } from '../common/trace/trace-context.js'
 
 type Registerable = (
   plugin: unknown,
@@ -16,6 +17,8 @@ const START_KEY = '__metricsStartedAt'
 
 interface FastifyReqWithStart {
   [START_KEY]?: bigint
+  id?: string
+  spanId?: string
   method?: string
   url?: string
   routeOptions?: { url?: string }
@@ -50,7 +53,23 @@ export async function registerFastifyPlugins(app: NestFastifyApplication): Promi
   const fastify = app.getHttpAdapter().getInstance() as any
   fastify.addHook('onRequest', async (req: FastifyReqWithStart) => {
     req[START_KEY] = process.hrtime.bigint()
+    // 在 FastifyRequest 上挂 spanId / parentSpanId（genReqId 阶段挂到 raw req 上跨不到这里）
+    attachSpanContext(req)
   })
+  // W3C Trace Context：把 traceId(=req.id) + spanId 写回 traceresponse，方便客户端 / 网关溯源
+  fastify.addHook(
+    'onSend',
+    async (
+      req: FastifyReqWithStart,
+      reply: { header: (k: string, v: string) => void },
+      payload: unknown,
+    ) => {
+      if (typeof req.id === 'string' && typeof req.spanId === 'string') {
+        reply.header('traceresponse', formatTraceresponse(req.id, req.spanId))
+      }
+      return payload
+    },
+  )
   fastify.addHook(
     'onResponse',
     async (
