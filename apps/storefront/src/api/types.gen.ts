@@ -1958,7 +1958,13 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        couponCode?: string;
+                    };
+                };
+            };
             responses: {
                 /** @description Cart materialized into a pending order; cart cleared */
                 201: {

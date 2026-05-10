@@ -184,8 +184,9 @@ export const api = {
   clearCart(): Promise<void> {
     return apiRequest('/cart', { method: 'DELETE' })
   },
-  checkout(): Promise<Order> {
-    return apiRequest('/cart/checkout', { method: 'POST' })
+  checkout(couponCode?: string): Promise<Order> {
+    const body = couponCode ? { couponCode } : {}
+    return apiRequest('/cart/checkout', { method: 'POST', body })
   },
   // Orders
   listOrders(): Promise<{ items: Order[]; total: number; page: number; pageSize: number }> {

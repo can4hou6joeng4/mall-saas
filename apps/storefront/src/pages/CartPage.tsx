@@ -7,6 +7,7 @@ export function CartPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [checkoutMsg, setCheckoutMsg] = useState<string | null>(null)
+  const [couponCode, setCouponCode] = useState('')
   const cartQuery = useQuery({
     queryKey: ['storefront-cart'],
     queryFn: () => api.listCart(),
@@ -25,9 +26,12 @@ export function CartPage() {
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['storefront-cart'] }),
   })
   const checkoutMutation = useMutation({
-    mutationFn: () => api.checkout(),
+    mutationFn: (code: string | undefined) => api.checkout(code),
     onSuccess: (order) => {
-      setCheckoutMsg(`下单成功，订单 #${order.id}`)
+      const discount = order.discountCents > 0
+        ? `（优惠 ¥ ${(order.discountCents / 100).toFixed(2)}）`
+        : ''
+      setCheckoutMsg(`下单成功，订单 #${order.id}${discount}`)
       void queryClient.invalidateQueries({ queryKey: ['storefront-cart'] })
       void queryClient.invalidateQueries({ queryKey: ['storefront-orders'] })
       setTimeout(() => navigate('/orders'), 800)
@@ -100,14 +104,27 @@ export function CartPage() {
                 })}
               </tbody>
             </table>
-            <div className="row" style={{ justifyContent: 'space-between', marginTop: 16 }}>
+            <div className="row" style={{ justifyContent: 'space-between', marginTop: 16, alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
               <strong>合计 ¥ {(total / 100).toFixed(2)}</strong>
-              <button
-                onClick={() => checkoutMutation.mutate()}
-                disabled={checkoutMutation.isPending}
-              >
-                {checkoutMutation.isPending ? '提交中…' : '结算'}
-              </button>
+              <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                <label htmlFor="cart-coupon" className="muted" style={{ marginRight: 4 }}>
+                  优惠券
+                </label>
+                <input
+                  id="cart-coupon"
+                  type="text"
+                  placeholder="可选"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.trim())}
+                  style={{ width: 140 }}
+                />
+                <button
+                  onClick={() => checkoutMutation.mutate(couponCode || undefined)}
+                  disabled={checkoutMutation.isPending}
+                >
+                  {checkoutMutation.isPending ? '提交中…' : '结算'}
+                </button>
+              </div>
             </div>
           </>
         )}

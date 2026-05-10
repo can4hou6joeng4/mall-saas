@@ -492,6 +492,16 @@ registry.registerPath({
   path: '/cart/checkout',
   tags: ['cart'],
   security: tenantSecurity,
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({ couponCode: z.string().optional() }),
+        },
+      },
+      required: false,
+    },
+  },
   responses: {
     '201': {
       description: 'Cart materialized into a pending order; cart cleared',

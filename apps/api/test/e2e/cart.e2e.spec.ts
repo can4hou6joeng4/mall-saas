@@ -168,4 +168,81 @@ describe('Cart API + checkout (e2e)', () => {
     })
     expect(out.statusCode).toBe(404)
   })
+
+  it('checkout with couponCode applies discount; invalid code is rejected; bare body still works', async () => {
+    // 准备：admin 创建优惠券 + user 加购
+    const merchantToken = await registerAndLogin(app, {
+      tenantId: 88,
+      email: 'merchant@t88.dev',
+      password: 'p@ssw0rd!',
+      role: 'admin',
+    })
+    // code 加随机后缀避免跨 run unique 冲突
+    const code = `BOOK_OFF_${Date.now()}`
+    const cou = await app.inject({
+      method: 'POST',
+      url: '/coupons',
+      headers: bearer(merchantToken),
+      payload: {
+        code,
+        discountType: 'AMOUNT',
+        discountValue: 500,
+        minOrderCents: 0,
+        maxUsage: 0,
+      },
+    })
+    expect(cou.statusCode).toBe(201)
+
+    // 1) 不带 body：仍然 201（向后兼容 M19 storefront）
+    await app.inject({
+      method: 'POST',
+      url: '/cart/items',
+      headers: bearer(userToken),
+      payload: { productId: bookId, quantity: 1 },
+    })
+    const bare = await app.inject({
+      method: 'POST',
+      url: '/cart/checkout',
+      headers: bearer(userToken),
+    })
+    expect(bare.statusCode).toBe(201)
+    const bareOrder = bare.json() as { discountCents: number; couponId: number | null }
+    expect(bareOrder.discountCents).toBe(0)
+    expect(bareOrder.couponId).toBeNull()
+
+    // 2) 带有效 couponCode：discount > 0
+    await app.inject({
+      method: 'POST',
+      url: '/cart/items',
+      headers: bearer(userToken),
+      payload: { productId: bookId, quantity: 2 },
+    })
+    const withCoupon = await app.inject({
+      method: 'POST',
+      url: '/cart/checkout',
+      headers: bearer(userToken),
+      payload: { couponCode: code },
+    })
+    expect(withCoupon.statusCode).toBe(201)
+    const couponOrder = withCoupon.json() as { discountCents: number; couponId: number | null }
+    expect(couponOrder.discountCents).toBe(500)
+    expect(couponOrder.couponId).not.toBeNull()
+
+    // 3) 不存在的券 → 404 + cart 不被清空
+    await app.inject({
+      method: 'POST',
+      url: '/cart/items',
+      headers: bearer(userToken),
+      payload: { productId: bookId, quantity: 1 },
+    })
+    const bad = await app.inject({
+      method: 'POST',
+      url: '/cart/checkout',
+      headers: bearer(userToken),
+      payload: { couponCode: 'NOPE' },
+    })
+    expect(bad.statusCode).toBe(404)
+    const cart = await app.inject({ method: 'GET', url: '/cart', headers: bearer(userToken) })
+    expect((cart.json() as unknown[]).length).toBe(1)
+  })
 })

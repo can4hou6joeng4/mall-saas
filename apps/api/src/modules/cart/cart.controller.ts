@@ -16,6 +16,8 @@ import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js'
 import {
   type AddCartItemDto,
   addCartItemSchema,
+  type CartCheckoutDto,
+  cartCheckoutSchema,
   type UpdateCartItemDto,
   updateCartItemSchema,
 } from './cart.dto.js'
@@ -68,7 +70,11 @@ export class CartController {
 
   @Post('checkout')
   @HttpCode(201)
-  checkout(@CurrentTenant() tenantId: TenantId, @CurrentUser() user: RequestContext) {
-    return this.cart.checkout(tenantId, user.userId)
+  checkout(
+    @CurrentTenant() tenantId: TenantId,
+    @CurrentUser() user: RequestContext,
+    @Body(new ZodValidationPipe(cartCheckoutSchema)) dto: CartCheckoutDto = {},
+  ) {
+    return this.cart.checkout(tenantId, user.userId, dto.couponCode)
   }
 }
