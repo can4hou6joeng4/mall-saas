@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { ApiError, api, type CartItem } from '../api/client.js'
+import { useT } from '../i18n/index.js'
 
 export function CartPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const t = useT()
   const [checkoutMsg, setCheckoutMsg] = useState<string | null>(null)
   const [couponCode, setCouponCode] = useState('')
   const cartQuery = useQuery({
@@ -29,9 +31,9 @@ export function CartPage() {
     mutationFn: (code: string | undefined) => api.checkout(code),
     onSuccess: (order) => {
       const discount = order.discountCents > 0
-        ? `（优惠 ¥ ${(order.discountCents / 100).toFixed(2)}）`
+        ? `（${t('cart_checkout_discount')} ¥ ${(order.discountCents / 100).toFixed(2)}）`
         : ''
-      setCheckoutMsg(`下单成功，订单 #${order.id}${discount}`)
+      setCheckoutMsg(`${t('cart_checkout_ok')} #${order.id}${discount}`)
       void queryClient.invalidateQueries({ queryKey: ['storefront-cart'] })
       void queryClient.invalidateQueries({ queryKey: ['storefront-orders'] })
       setTimeout(() => navigate('/orders'), 800)
@@ -51,23 +53,23 @@ export function CartPage() {
   return (
     <div className="col">
       <div className="panel">
-        <h2 style={{ marginTop: 0 }}>购物车</h2>
-        {cartQuery.isLoading && <p className="muted">加载中…</p>}
+        <h2 style={{ marginTop: 0 }}>{t('cart_title')}</h2>
+        {cartQuery.isLoading && <p className="muted">{t('cart_loading')}</p>}
         {cartQuery.error instanceof ApiError && (
           <div className="error">{cartQuery.error.message}</div>
         )}
         {cartQuery.data && items.length === 0 && (
-          <p className="muted">购物车空空如也，去逛点商品吧</p>
+          <p className="muted">{t('cart_empty')}</p>
         )}
         {items.length > 0 && (
           <>
             <table>
               <thead>
                 <tr>
-                  <th>商品</th>
-                  <th>单价</th>
-                  <th>数量</th>
-                  <th>小计</th>
+                  <th>{t('cart_col_product')}</th>
+                  <th>{t('cart_col_price')}</th>
+                  <th>{t('cart_col_quantity')}</th>
+                  <th>{t('cart_col_subtotal')}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -96,7 +98,7 @@ export function CartPage() {
                           className="secondary"
                           onClick={() => removeMutation.mutate(it.productId)}
                         >
-                          删除
+                          {t('cart_remove')}
                         </button>
                       </td>
                     </tr>
@@ -105,15 +107,17 @@ export function CartPage() {
               </tbody>
             </table>
             <div className="row" style={{ justifyContent: 'space-between', marginTop: 16, alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-              <strong>合计 ¥ {(total / 100).toFixed(2)}</strong>
+              <strong>
+                {t('cart_total')} ¥ {(total / 100).toFixed(2)}
+              </strong>
               <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                 <label htmlFor="cart-coupon" className="muted" style={{ marginRight: 4 }}>
-                  优惠券
+                  {t('cart_coupon')}
                 </label>
                 <input
                   id="cart-coupon"
                   type="text"
-                  placeholder="可选"
+                  placeholder={t('cart_coupon_placeholder')}
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value.trim())}
                   style={{ width: 140 }}
@@ -122,7 +126,7 @@ export function CartPage() {
                   onClick={() => checkoutMutation.mutate(couponCode || undefined)}
                   disabled={checkoutMutation.isPending}
                 >
-                  {checkoutMutation.isPending ? '提交中…' : '结算'}
+                  {checkoutMutation.isPending ? t('cart_checking_out') : t('cart_checkout')}
                 </button>
               </div>
             </div>
@@ -130,7 +134,10 @@ export function CartPage() {
         )}
         {checkoutMsg && <div className="muted" style={{ marginTop: 8 }}>{checkoutMsg}</div>}
         {checkoutMutation.error instanceof ApiError && (
-          <div className="error">结算失败：{checkoutMutation.error.message}</div>
+          <div className="error">
+            {t('cart_checkout_failed')}
+            {checkoutMutation.error.message}
+          </div>
         )}
       </div>
     </div>

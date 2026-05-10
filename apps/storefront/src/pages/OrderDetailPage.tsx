@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { ApiError, api } from '../api/client.js'
+import { useT, type TKey } from '../i18n/index.js'
 
-const STATUS_DISPLAY: Record<string, string> = {
-  pending: '待支付',
-  paid: '已支付',
-  shipped: '已发货',
-  cancelled: '已取消',
+const STATUS_KEY: Record<string, TKey> = {
+  pending: 'status_pending',
+  paid: 'status_paid',
+  shipped: 'status_shipped',
+  cancelled: 'status_cancelled',
 }
 
 function formatYuan(cents: number): string {
@@ -17,6 +18,7 @@ export function OrderDetailPage() {
   const { id: idParam } = useParams<{ id: string }>()
   const id = Number(idParam)
   const queryClient = useQueryClient()
+  const t = useT()
   const orderQuery = useQuery({
     queryKey: ['storefront-order', id],
     queryFn: () => api.getOrder(id),
@@ -34,26 +36,28 @@ export function OrderDetailPage() {
   if (!Number.isFinite(id) || id <= 0) {
     return (
       <div className="panel">
-        <p className="error">无效订单 ID</p>
-        <Link to="/orders">← 返回我的订单</Link>
+        <p className="error">{t('order_invalid_id')}</p>
+        <Link to="/orders">{t('order_back')}</Link>
       </div>
     )
   }
 
+  const statusKey = orderQuery.data ? STATUS_KEY[orderQuery.data.status] : undefined
+
   return (
     <div className="col">
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link to="/orders">← 返回我的订单</Link>
+        <Link to="/orders">{t('order_back')}</Link>
         {orderQuery.data?.status === 'pending' && (
           <button
             onClick={() => payMutation.mutate()}
             disabled={payMutation.isPending || payMutation.isSuccess}
           >
             {payMutation.isPending
-              ? '调起支付中…'
+              ? t('order_paying')
               : payMutation.isSuccess
-                ? '支付已发起，等待回调…'
-                : '去支付'}
+                ? t('order_pay_dispatched')
+                : t('order_pay')}
           </button>
         )}
       </div>
@@ -62,36 +66,41 @@ export function OrderDetailPage() {
         <div className="error">{orderQuery.error.message}</div>
       )}
       {payMutation.error instanceof ApiError && (
-        <div className="error">支付失败：{payMutation.error.message}</div>
+        <div className="error">
+          {t('order_pay_failed')}
+          {payMutation.error.message}
+        </div>
       )}
 
       {orderQuery.data && (
         <>
           <div className="panel">
-            <h2 style={{ marginTop: 0 }}>订单 #{orderQuery.data.id}</h2>
+            <h2 style={{ marginTop: 0 }}>
+              {`${t('orders_col_id')} #${orderQuery.data.id}`}
+            </h2>
             <div className="row" style={{ gap: 24, flexWrap: 'wrap' }}>
               <div>
-                <div className="muted">状态</div>
+                <div className="muted">{t('order_status')}</div>
                 <span className={`status-pill ${orderQuery.data.status}`}>
-                  {STATUS_DISPLAY[orderQuery.data.status] ?? orderQuery.data.status}
+                  {statusKey ? t(statusKey) : orderQuery.data.status}
                 </span>
               </div>
               <div>
-                <div className="muted">下单时间</div>
+                <div className="muted">{t('order_created')}</div>
                 <div>{orderQuery.data.createdAt}</div>
               </div>
             </div>
           </div>
 
           <div className="panel">
-            <h3 style={{ marginTop: 0 }}>商品</h3>
+            <h3 style={{ marginTop: 0 }}>{t('order_items')}</h3>
             <table>
               <thead>
                 <tr>
                   <th>SKU</th>
-                  <th>单价</th>
-                  <th>数量</th>
-                  <th>小计</th>
+                  <th>{t('cart_col_price')}</th>
+                  <th>{t('cart_col_quantity')}</th>
+                  <th>{t('cart_col_subtotal')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -108,15 +117,15 @@ export function OrderDetailPage() {
           </div>
 
           <div className="panel">
-            <h3 style={{ marginTop: 0 }}>金额</h3>
+            <h3 style={{ marginTop: 0 }}>{t('order_amounts')}</h3>
             <table>
               <tbody>
                 <tr>
-                  <td>商品小计</td>
+                  <td>{t('order_subtotal')}</td>
                   <td>¥ {formatYuan(orderQuery.data.subtotalCents)}</td>
                 </tr>
                 <tr>
-                  <td>优惠券折扣</td>
+                  <td>{t('order_discount')}</td>
                   <td>
                     {orderQuery.data.discountCents > 0
                       ? `- ¥ ${formatYuan(orderQuery.data.discountCents)}`
@@ -125,7 +134,7 @@ export function OrderDetailPage() {
                 </tr>
                 <tr>
                   <td>
-                    <strong>实付</strong>
+                    <strong>{t('order_total')}</strong>
                   </td>
                   <td>
                     <strong>¥ {formatYuan(orderQuery.data.totalCents)}</strong>

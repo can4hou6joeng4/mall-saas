@@ -5,26 +5,34 @@ import { CartPage } from './pages/CartPage.js'
 import { OrdersPage } from './pages/OrdersPage.js'
 import { OrderDetailPage } from './pages/OrderDetailPage.js'
 import { clearSession, getToken, getUserEmail } from './api/client.js'
+import { useI18n } from './i18n/index.js'
 
 function ProtectedShell() {
   const navigate = useNavigate()
+  const { locale, setLocale, t } = useI18n()
   if (!getToken()) return <Navigate to="/login" replace />
   return (
     <div className="shell">
       <header className="topbar">
         <nav>
           <NavLink to="/products" className={({ isActive }) => (isActive ? 'active' : '')}>
-            商品
+            {t('nav_products')}
           </NavLink>
           <NavLink to="/cart" className={({ isActive }) => (isActive ? 'active' : '')}>
-            购物车
+            {t('nav_cart')}
           </NavLink>
           <NavLink to="/orders" className={({ isActive }) => (isActive ? 'active' : '')}>
-            我的订单
+            {t('nav_orders')}
           </NavLink>
         </nav>
         <div className="row">
           <span className="meta">{getUserEmail() ?? ''}</span>
+          <button
+            className="secondary"
+            onClick={() => setLocale(locale === 'zh-CN' ? 'en' : 'zh-CN')}
+          >
+            {t('locale_switch')}
+          </button>
           <button
             className="secondary"
             onClick={() => {
@@ -32,7 +40,7 @@ function ProtectedShell() {
               navigate('/login', { replace: true })
             }}
           >
-            登出
+            {t('nav_logout')}
           </button>
         </div>
       </header>

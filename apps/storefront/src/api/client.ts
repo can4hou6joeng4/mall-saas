@@ -112,6 +112,12 @@ async function rawRequest(path: string, opts: RequestOptions): Promise<Response>
     }
   }
   const headers: Record<string, string> = { 'content-type': 'application/json' }
+  // 拉通 M17 后端 i18n：把 storefront 当前 locale 传给后端，BusinessException 错误消息按语言返
+  const localeRaw =
+    typeof window !== 'undefined' ? window.localStorage.getItem('mall_storefront_locale') : null
+  if (localeRaw === 'en' || localeRaw === 'zh-CN') {
+    headers['accept-language'] = localeRaw
+  }
   const token = getToken()
   if (token) headers['authorization'] = `Bearer ${token}`
   const init: RequestInit = { method: opts.method ?? 'GET', headers }

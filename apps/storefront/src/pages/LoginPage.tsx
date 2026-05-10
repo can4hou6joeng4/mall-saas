@@ -9,9 +9,11 @@ import {
   setToken,
   setUserEmail,
 } from '../api/client.js'
+import { useT } from '../i18n/index.js'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const t = useT()
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [tenantId, setTenantIdInput] = useState('')
   const [email, setEmail] = useState('')
@@ -26,7 +28,7 @@ export function LoginPage() {
     setError(null)
     const tid = Number(tenantId)
     if (!Number.isInteger(tid) || tid <= 0) {
-      setError('tenantId 必须是正整数')
+      setError(t('login_invalid_tenant'))
       return
     }
     setBusy(true)
@@ -41,7 +43,11 @@ export function LoginPage() {
       setUserEmail(res.user.email)
       navigate('/products', { replace: true })
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : `${mode} failed`)
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : t(mode === 'register' ? 'login_failed_register' : 'login_failed_login'),
+      )
     } finally {
       setBusy(false)
     }
@@ -50,10 +56,12 @@ export function LoginPage() {
   return (
     <div className="login-screen">
       <form className="login-card" onSubmit={onSubmit}>
-        <h1>Mall Storefront</h1>
-        <p className="muted">{mode === 'register' ? '新用户注册' : '已有账号，欢迎回来'}</p>
+        <h1>{t('login_title')}</h1>
+        <p className="muted">
+          {mode === 'register' ? t('login_register_subtitle') : t('login_login_subtitle')}
+        </p>
         <label>
-          Tenant ID
+          {t('login_tenant_id')}
           <input
             type="text"
             inputMode="numeric"
@@ -64,7 +72,7 @@ export function LoginPage() {
           />
         </label>
         <label>
-          Email
+          {t('login_email')}
           <input
             type="email"
             value={email}
@@ -73,7 +81,7 @@ export function LoginPage() {
           />
         </label>
         <label>
-          Password
+          {t('login_password')}
           <input
             type="password"
             value={password}
@@ -83,10 +91,14 @@ export function LoginPage() {
           />
         </label>
         <button type="submit" disabled={busy}>
-          {busy ? '处理中…' : mode === 'register' ? '注册并登录' : '登录'}
+          {busy
+            ? t('login_submitting')
+            : mode === 'register'
+              ? t('login_submit_register')
+              : t('login_submit_login')}
         </button>
         <div className="toggle">
-          {mode === 'register' ? '已经有账号？' : '还没有账号？'}{' '}
+          {mode === 'register' ? t('login_have_account') : t('login_no_account')}{' '}
           <a
             href="#"
             onClick={(e) => {
@@ -95,7 +107,7 @@ export function LoginPage() {
               setMode(mode === 'register' ? 'login' : 'register')
             }}
           >
-            {mode === 'register' ? '去登录' : '去注册'}
+            {mode === 'register' ? t('login_to_login') : t('login_to_register')}
           </a>
         </div>
         {error && <div className="error">{error}</div>}

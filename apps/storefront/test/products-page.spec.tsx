@@ -2,19 +2,20 @@ import { describe, expect, it, beforeEach, vi, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import { I18nProvider } from '../src/i18n/index.js'
 import { ProductsPage } from '../src/pages/ProductsPage.js'
 import { setToken, clearSession } from '../src/api/client.js'
 
 function withProviders(node: React.ReactNode) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return (
-    <QueryClientProvider client={qc}>
+    <I18nProvider><QueryClientProvider client={qc}>
       <MemoryRouter initialEntries={['/products']}>
         <Routes>
           <Route path="/products" element={node} />
         </Routes>
       </MemoryRouter>
-    </QueryClientProvider>
+    </QueryClientProvider></I18nProvider>
   )
 }
 

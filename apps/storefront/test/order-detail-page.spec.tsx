@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { I18nProvider } from '../src/i18n/index.js'
 import { OrderDetailPage } from '../src/pages/OrderDetailPage.js'
 import { setToken, clearSession } from '../src/api/client.js'
 
@@ -14,13 +15,13 @@ interface FetchInit {
 function withProviders(initialPath: string) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return (
-    <QueryClientProvider client={qc}>
+    <I18nProvider><QueryClientProvider client={qc}>
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
           <Route path="/orders/:id" element={<OrderDetailPage />} />
         </Routes>
       </MemoryRouter>
-    </QueryClientProvider>
+    </QueryClientProvider></I18nProvider>
   )
 }
 
@@ -70,7 +71,7 @@ describe('storefront OrderDetailPage', () => {
     )
 
     render(withProviders('/orders/555'))
-    await waitFor(() => expect(screen.getByText('订单 #555')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('订单号 #555')).toBeInTheDocument())
     expect(screen.getByText('待支付')).toBeInTheDocument()
     expect(screen.getByText('#21')).toBeInTheDocument()
     expect(screen.getByText('- ¥ 5.00')).toBeInTheDocument()
@@ -132,7 +133,7 @@ describe('storefront OrderDetailPage', () => {
       ),
     )
     render(withProviders('/orders/600'))
-    await waitFor(() => expect(screen.getByText('订单 #600')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('订单号 #600')).toBeInTheDocument())
     expect(screen.getByText('已支付')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '去支付' })).toBeNull()
   })

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { I18nProvider } from '../src/i18n/index.js'
 import { CartPage } from '../src/pages/CartPage.js'
 import { setToken, clearSession } from '../src/api/client.js'
 
@@ -13,14 +14,14 @@ interface FetchInit {
 function withProviders() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return (
-    <QueryClientProvider client={qc}>
+    <I18nProvider><QueryClientProvider client={qc}>
       <MemoryRouter initialEntries={['/cart']}>
         <Routes>
           <Route path="/cart" element={<CartPage />} />
           <Route path="/orders" element={<div>orders mock</div>} />
         </Routes>
       </MemoryRouter>
-    </QueryClientProvider>
+    </QueryClientProvider></I18nProvider>
   )
 }
 

@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiError, api } from '../api/client.js'
+import { useT } from '../i18n/index.js'
 
 export function ProductsPage() {
   const queryClient = useQueryClient()
+  const t = useT()
   const productsQuery = useQuery({
     queryKey: ['storefront-products'],
     queryFn: () => api.listProducts({ page: 1, pageSize: 50 }),
@@ -17,16 +19,19 @@ export function ProductsPage() {
   return (
     <div className="col">
       <div className="panel">
-        <h2 style={{ marginTop: 0 }}>所有商品</h2>
-        {productsQuery.isLoading && <p className="muted">加载中…</p>}
+        <h2 style={{ marginTop: 0 }}>{t('products_title')}</h2>
+        {productsQuery.isLoading && <p className="muted">{t('products_loading')}</p>}
         {productsQuery.error instanceof ApiError && (
           <div className="error">{productsQuery.error.message}</div>
         )}
         {addMutation.error instanceof ApiError && (
-          <div className="error">加购物车失败：{addMutation.error.message}</div>
+          <div className="error">
+            {t('products_add_failed')}
+            {addMutation.error.message}
+          </div>
         )}
         {productsQuery.data && productsQuery.data.items.length === 0 && (
-          <p className="muted">暂无在售商品</p>
+          <p className="muted">{t('products_empty')}</p>
         )}
         {productsQuery.data && productsQuery.data.items.length > 0 && (
           <div className="product-grid">
@@ -38,14 +43,16 @@ export function ProductsPage() {
                   <h3>{p.name}</h3>
                   <div className="price">¥ {(p.priceCents / 100).toFixed(2)}</div>
                   <div className="meta">
-                    库存可售 {available}{' '}
-                    {soldOut && <span style={{ color: '#dc2626' }}>· 已售罄</span>}
+                    {t('products_stock')} {available}{' '}
+                    {soldOut && (
+                      <span style={{ color: '#dc2626' }}>· {t('products_sold_out')}</span>
+                    )}
                   </div>
                   <button
                     onClick={() => addMutation.mutate({ productId: p.id })}
                     disabled={soldOut || addMutation.isPending}
                   >
-                    加入购物车
+                    {addMutation.isPending ? t('products_adding') : t('products_add')}
                   </button>
                 </div>
               )
