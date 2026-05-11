@@ -4,7 +4,12 @@
 
 [![ci](https://github.com/can4hou6joeng4/mall-saas/actions/workflows/ci.yml/badge.svg)](https://github.com/can4hou6joeng4/mall-saas/actions/workflows/ci.yml)
 [![release](https://github.com/can4hou6joeng4/mall-saas/actions/workflows/release.yml/badge.svg)](https://github.com/can4hou6joeng4/mall-saas/actions/workflows/release.yml)
-[![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![codeql](https://github.com/can4hou6joeng4/mall-saas/actions/workflows/codeql.yml/badge.svg)](https://github.com/can4hou6joeng4/mall-saas/actions/workflows/codeql.yml)
+[![license](https://img.shields.io/github/license/can4hou6joeng4/mall-saas?color=blue)](./LICENSE)
+[![stars](https://img.shields.io/github/stars/can4hou6joeng4/mall-saas?style=social)](https://github.com/can4hou6joeng4/mall-saas/stargazers)
+[![GHCR](https://img.shields.io/badge/ghcr.io-mall--api-blue?logo=docker)](https://github.com/can4hou6joeng4/mall-saas/pkgs/container/mall-api)
+[![discussions](https://img.shields.io/github/discussions/can4hou6joeng4/mall-saas?logo=github)](https://github.com/can4hou6joeng4/mall-saas/discussions)
+[![good first issue](https://img.shields.io/github/issues/can4hou6joeng4/mall-saas/good%20first%20issue?label=good%20first%20issue&color=7057ff)](https://github.com/can4hou6joeng4/mall-saas/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 
 一个面向小团队的多租户 SaaS 商城工程样板，强调**租户数据隔离（Row-Level Security）+ 可观测（trace 全链路贯穿）+ 端到端可验证**。
 
@@ -152,6 +157,14 @@ docker pull ghcr.io/can4hou6joeng4/mall-api:latest
     ├── ci.yml         shellcheck + 全工作区 + docker-smoke + acceptance-smoke
     └── release.yml    on push tag v* → 构建并推送 GHCR
 ```
+
+## 贡献 & 路线图
+
+- 想参与？读 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+- 行为准则：[CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)。
+- 安全漏洞披露：[SECURITY.md](./SECURITY.md)。
+- 未来方向：[ROADMAP.md](./ROADMAP.md)。
+- 完整变更日志：[CHANGELOG.md](./CHANGELOG.md)。
 
 ## License
 

@@ -67,6 +67,7 @@ jobs:
           context: .
           file: apps/api/Dockerfile
           target: runner
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.api_tags }}
           cache-from: type=gha
@@ -78,6 +79,7 @@ jobs:
           context: .
           file: apps/api/Dockerfile
           target: migrate
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.migrate_tags }}
           cache-from: type=gha
