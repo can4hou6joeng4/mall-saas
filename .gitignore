@@ -16,3 +16,4 @@ playwright-report/
 .playwright/
 # Local storage uploads
 var/uploads/
+site/

@@ -119,6 +119,8 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 docker pull ghcr.io/can4hou6joeng4/mall-api:latest
 ```
 
+> 📖 在线 API 文档：<https://can4hou6joeng4.github.io/mall-saas/>（由 `.github/workflows/pages.yml` 在后端 OpenAPI 更新时自动发布）
+
 ## 多租户数据隔离（核心设计）
 
 1. **JWT 携带 `tenantId`**——所有 tenant-scope 请求由 `Auth` 中间件解析后存入 AsyncLocalStorage。
