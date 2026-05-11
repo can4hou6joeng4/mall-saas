@@ -5,6 +5,7 @@
 [![ci](https://github.com/can4hou6joeng4/mall-saas/actions/workflows/ci.yml/badge.svg)](https://github.com/can4hou6joeng4/mall-saas/actions/workflows/ci.yml)
 [![release](https://github.com/can4hou6joeng4/mall-saas/actions/workflows/release.yml/badge.svg)](https://github.com/can4hou6joeng4/mall-saas/actions/workflows/release.yml)
 [![codeql](https://github.com/can4hou6joeng4/mall-saas/actions/workflows/codeql.yml/badge.svg)](https://github.com/can4hou6joeng4/mall-saas/actions/workflows/codeql.yml)
+[![codecov](https://codecov.io/gh/can4hou6joeng4/mall-saas/branch/main/graph/badge.svg)](https://codecov.io/gh/can4hou6joeng4/mall-saas)
 [![license](https://img.shields.io/github/license/can4hou6joeng4/mall-saas?color=blue)](./LICENSE)
 [![stars](https://img.shields.io/github/stars/can4hou6joeng4/mall-saas?style=social)](https://github.com/can4hou6joeng4/mall-saas/stargazers)
 [![GHCR](https://img.shields.io/badge/ghcr.io-mall--api-blue?logo=docker)](https://github.com/can4hou6joeng4/mall-saas/pkgs/container/mall-api)

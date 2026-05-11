@@ -10,7 +10,8 @@
     "lint": "eslint \"src/**/*.ts\" --max-warnings 0",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "openapi:gen": "tsx scripts/generate-openapi.ts"
+    "openapi:gen": "tsx scripts/generate-openapi.ts",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.5.0",
@@ -50,6 +51,7 @@
     "@nestjs/cli": "11.0.10",
     "@nestjs/testing": "11.1.19",
     "@types/node": "22.19.17",
+    "@vitest/coverage-v8": "^4.1.6",
     "dotenv": "17.4.2",
     "eslint": "9.18.0",
     "prisma": "7.8.0",

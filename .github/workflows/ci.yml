@@ -79,6 +79,16 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
+      - run: pnpm test:coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./apps/api/coverage/lcov.info,./apps/admin/coverage/lcov.info,./apps/store/coverage/lcov.info,./apps/storefront/coverage/lcov.info
+          flags: unittests
+          fail_ci_if_error: false
+          verbose: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - run: pnpm build
 
   docker-smoke:

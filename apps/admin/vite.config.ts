@@ -18,5 +18,20 @@ export default defineConfig({
     setupFiles: ['./test/setup.ts'],
     // playwright e2e 由 `pnpm test:e2e` 单独跑，不被 vitest 拾取
     include: ['test/**/*.spec.ts', 'test/**/*.spec.tsx'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/test/**',
+        '**/e2e/**',
+        '**/*.config.*',
+        '**/*.gen.ts',
+        '**/main.tsx',
+      ],
+    },
   },
 })
