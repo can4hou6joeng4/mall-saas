@@ -15,6 +15,10 @@ on:
         required: true
         type: string
 
+env:
+  # 提前迁移到 Node.js 24 runtime，关闭 actions/checkout@v4 等的 deprecation 警告
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
