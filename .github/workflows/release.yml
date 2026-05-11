@@ -16,7 +16,7 @@ on:
         type: string
 
 env:
-  # 提前迁移到 Node.js 24 runtime，关闭 actions/checkout@v4 等的 deprecation 警告
+  # 提前迁移到 Node.js 24 runtime，关闭 actions/checkout@v6 等的 deprecation 警告
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 concurrency:
@@ -31,7 +31,7 @@ jobs:
   push-images:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # push tag 触发：默认 ref；workflow_dispatch 触发：用 inputs.tag
           ref: ${{ inputs.tag || github.ref }}
