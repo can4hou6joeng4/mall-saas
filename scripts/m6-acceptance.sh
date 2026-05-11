@@ -42,7 +42,7 @@ step 5/8 "构建所有包"
 pnpm build
 
 step 6/8 "构建镜像并启动容器"
-docker build -f "${ROOT}/apps/api/Dockerfile" -t "${IMAGE_TAG}" "${ROOT}"
+docker build -f "${ROOT}/apps/api/Dockerfile" --target runner -t "${IMAGE_TAG}" "${ROOT}"
 # 先清掉表里历史 platform admin，验证 bootstrap 路径
 docker exec -i mall-postgres psql -U mall -d mall -c \
   'DELETE FROM "PlatformAdmin";' >/dev/null

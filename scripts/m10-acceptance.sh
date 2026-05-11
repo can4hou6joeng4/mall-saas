@@ -42,7 +42,7 @@ pnpm test
 pnpm build
 
 step 3/8 "构建镜像"
-docker build -f "${ROOT}/apps/api/Dockerfile" -t "${IMAGE_TAG}" "${ROOT}"
+docker build -f "${ROOT}/apps/api/Dockerfile" --target runner -t "${IMAGE_TAG}" "${ROOT}"
 
 step 4/8 "启动容器（AUTH_RATE_LIMIT_MAX=4 便于触发 429）"
 docker exec -i mall-postgres psql -U mall -d mall <<SQL >/dev/null

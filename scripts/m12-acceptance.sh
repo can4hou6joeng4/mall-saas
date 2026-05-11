@@ -33,7 +33,7 @@ pnpm --filter @mall/api exec prisma generate
 pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 step 2/7 "构建镜像 + 启容器"
-docker build -f "${ROOT}/apps/api/Dockerfile" -t "${IMAGE_TAG}" "${ROOT}"
+docker build -f "${ROOT}/apps/api/Dockerfile" --target runner -t "${IMAGE_TAG}" "${ROOT}"
 docker exec -i mall-postgres psql -U mall -d mall <<SQL >/dev/null
 INSERT INTO "Tenant" (id, name) VALUES (${TENANT_ID}, 'm12-acc') ON CONFLICT (id) DO NOTHING;
 DELETE FROM "CartItem" WHERE "tenantId" = ${TENANT_ID};

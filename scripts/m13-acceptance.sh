@@ -56,7 +56,7 @@ for i in $(seq 1 30); do
 done
 
 step 3/7 "构建镜像 + 起 mall-api（指 stripe-mock）"
-docker build -f "${ROOT}/apps/api/Dockerfile" -t "${IMAGE_TAG}" "${ROOT}"
+docker build -f "${ROOT}/apps/api/Dockerfile" --target runner -t "${IMAGE_TAG}" "${ROOT}"
 docker exec -i mall-postgres psql -U mall -d mall <<SQL >/dev/null
 INSERT INTO "Tenant" (id, name) VALUES (${TENANT_ID}, 'm13-acc') ON CONFLICT (id) DO NOTHING;
 DELETE FROM "Payment" WHERE "tenantId" = ${TENANT_ID};

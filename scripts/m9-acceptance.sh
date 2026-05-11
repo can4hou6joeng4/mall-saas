@@ -49,7 +49,7 @@ else
 fi
 
 step 5/7 "构建 api 镜像并起容器"
-docker build -f "${ROOT}/apps/api/Dockerfile" -t "${IMAGE_TAG}" "${ROOT}"
+docker build -f "${ROOT}/apps/api/Dockerfile" --target runner -t "${IMAGE_TAG}" "${ROOT}"
 # 清掉历史 platform admin 让 bootstrap 重建
 docker exec -i mall-postgres psql -U mall -d mall -c 'DELETE FROM "PlatformAdmin";' >/dev/null
 

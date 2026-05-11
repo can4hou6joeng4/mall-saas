@@ -33,7 +33,7 @@ pnpm --filter @mall/api exec prisma generate
 pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 step 2/6 "构建镜像"
-docker build -f "${ROOT}/apps/api/Dockerfile" -t "${IMAGE_TAG}" "${ROOT}"
+docker build -f "${ROOT}/apps/api/Dockerfile" --target runner -t "${IMAGE_TAG}" "${ROOT}"
 
 step 3/6 "起容器（LOG_LEVEL=debug 便于看到事务日志）"
 docker exec -i mall-postgres psql -U mall -d mall <<SQL >/dev/null

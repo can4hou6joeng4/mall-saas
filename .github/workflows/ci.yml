@@ -111,7 +111,7 @@ jobs:
           DATABASE_URL: postgresql://mall:mall@localhost:5432/mall?schema=public
         run: pnpm --filter @mall/api exec prisma migrate deploy
       - name: Build API image
-        run: docker build -f apps/api/Dockerfile -t mall-api:ci-smoke .
+        run: docker build -f apps/api/Dockerfile --target runner -t mall-api:ci-smoke .
       - name: Run image + tenant smoke
         env:
           PAYMENT_MOCK_SECRET: ci-smoke-mock-secret-min16

@@ -38,7 +38,7 @@ pnpm test
 pnpm build
 
 step 4/7 "构建镜像并启动容器（RATE_LIMIT_MAX=10 便于触发 429）"
-docker build -f "${ROOT}/apps/api/Dockerfile" -t "${IMAGE_TAG}" "${ROOT}"
+docker build -f "${ROOT}/apps/api/Dockerfile" --target runner -t "${IMAGE_TAG}" "${ROOT}"
 docker run -d \
   --name "${CONTAINER}" \
   --add-host=host.docker.internal:host-gateway \

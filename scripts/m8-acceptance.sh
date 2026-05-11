@@ -42,7 +42,7 @@ path_count=$(python3 -c "import json,sys; d=json.load(open('${ROOT}/apps/api/ope
 echo "  ✓ openapi.json 含 ${path_count} 个 paths"
 
 step 4/6 "构建镜像并启动容器"
-docker build -f "${ROOT}/apps/api/Dockerfile" -t "${IMAGE_TAG}" "${ROOT}"
+docker build -f "${ROOT}/apps/api/Dockerfile" --target runner -t "${IMAGE_TAG}" "${ROOT}"
 docker run -d \
   --name "${CONTAINER}" \
   --add-host=host.docker.internal:host-gateway \
