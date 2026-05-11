@@ -1,4 +1,7 @@
 import 'reflect-metadata'
+// OTel 必须最先 import + start，让 auto-instrumentation 能挂到后续模块的 require 链上
+import { startOtelIfEnabled } from './bootstrap/otel.js'
+startOtelIfEnabled()
 // 必须早于任何 DTO 的 zod schema 求值，否则 `.openapi()` 元数据方法不会附加到已创建的 schema
 import './openapi/extend-zod.js'
 import { NestFactory } from '@nestjs/core'
