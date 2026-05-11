@@ -1,8 +1,31 @@
 {
-  "name": "new-mall",
+  "name": "mall-saas",
   "private": true,
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.34.0",
+  "description": "多租户 SaaS 电商样板：NestJS + Fastify + Prisma + PG RLS + 三前端 + W3C Trace Context + OpenTelemetry",
+  "license": "MIT",
+  "author": "can4hou6joeng4 <can4hou6joeng4@163.com>",
+  "homepage": "https://github.com/can4hou6joeng4/mall-saas",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/can4hou6joeng4/mall-saas.git"
+  },
+  "bugs": {
+    "url": "https://github.com/can4hou6joeng4/mall-saas/issues"
+  },
+  "keywords": [
+    "saas",
+    "multi-tenant",
+    "ecommerce",
+    "nestjs",
+    "prisma",
+    "rls",
+    "opentelemetry",
+    "monorepo",
+    "fastify",
+    "typescript"
+  ],
   "packageManager": "pnpm@9.15.0",
   "engines": {
     "node": ">=22.0.0",
