@@ -6,6 +6,9 @@ on:
   push:
     tags:
       - 'v*'
+  # 允许手动从已有 tag dispatch（首次发布 / 重跑失败 / 回填用）
+  # 用法：gh workflow run release.yml --ref v0.34.0-m34
+  workflow_dispatch:
 
 concurrency:
   group: release-${{ github.ref }}
