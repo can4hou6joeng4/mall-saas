@@ -1,0 +1,71 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Shanghai
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+    labels:
+      - dependencies
+      - github-actions
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Shanghai
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "chore"
+    labels:
+      - dependencies
+      - npm
+    groups:
+      # 类型定义打包升级（@types/*），减少 PR 噪音
+      types:
+        patterns:
+          - "@types/*"
+      # NestJS 生态联动升级
+      nestjs:
+        patterns:
+          - "@nestjs/*"
+          - "nestjs-*"
+      # React 生态联动升级
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "react-router*"
+          - "@types/react"
+          - "@types/react-dom"
+      # OpenTelemetry 生态必须整组升级
+      opentelemetry:
+        patterns:
+          - "@opentelemetry/*"
+      # Prisma 必须 client + adapter 同步
+      prisma:
+        patterns:
+          - "prisma"
+          - "@prisma/*"
+    ignore:
+      # @types/react 由 pnpm.overrides 锁在 18.3.28，避免 Dependabot 误升 19.x
+      - dependency-name: "@types/react"
+      - dependency-name: "@types/react-dom"
+
+  - package-ecosystem: docker
+    directory: /apps/api
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "ci"
+    labels:
+      - dependencies
+      - docker

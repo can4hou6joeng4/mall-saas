@@ -1,0 +1,84 @@
+name: Bug 报告
+description: 报告一个可复现的问题
+title: "bug: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你抽时间反馈！在提交前请先：
+        1. 搜索 [已有 Issue](https://github.com/can4hou6joeng4/mall-saas/issues?q=is%3Aissue) 避免重复
+        2. 安全漏洞请走 [Security Advisory](https://github.com/can4hou6joeng4/mall-saas/security/advisories/new)，**不要在此 Issue 公开**
+
+  - type: input
+    id: version
+    attributes:
+      label: 版本 / commit / tag
+      placeholder: "例如 v0.34.0-m34 或 commit hash"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: layer
+    attributes:
+      label: 受影响的层
+      multiple: true
+      options:
+        - 后端 apps/api
+        - 前端 apps/admin
+        - 前端 apps/store
+        - 前端 apps/storefront
+        - CI / scripts
+        - 文档 / README
+        - 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期行为
+      description: 你期望看到什么？
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+      description: 你看到了什么？错误日志 / 截图请贴在这里。
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤
+      description: 最小可复现示例
+      placeholder: |
+        1. 起依赖：docker compose up -d
+        2. 跑 ...
+        3. 看到 ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: env
+    attributes:
+      label: 环境
+      placeholder: |
+        - OS:
+        - Node:
+        - pnpm:
+        - Docker:
+        - 浏览器（若是前端 bug）:
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: 行为准则
+      options:
+        - label: 我已阅读 [Code of Conduct](https://github.com/can4hou6joeng4/mall-saas/blob/main/CODE_OF_CONDUCT.md)
+          required: true

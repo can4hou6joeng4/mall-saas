@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 安全漏洞披露
+    url: https://github.com/can4hou6joeng4/mall-saas/security/advisories/new
+    about: 安全问题请走 Security Advisory 私下披露，不要在 Issue 公开提交。
+  - name: 项目文档
+    url: https://github.com/can4hou6joeng4/mall-saas#readme
+    about: 部署、Quickstart、架构图与里程碑链请先看 README。
