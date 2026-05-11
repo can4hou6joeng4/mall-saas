@@ -1,5 +1,7 @@
 # mall-saas
 
+[English](./README.en.md) · [简体中文](./README.md)
+
 > 多租户 SaaS 电商样板：NestJS 11 + Fastify + Prisma 7 + PostgreSQL RLS + 三前端（admin / store / storefront）+ W3C Trace Context + OpenTelemetry。
 
 [![ci](https://github.com/can4hou6joeng4/mall-saas/actions/workflows/ci.yml/badge.svg)](https://github.com/can4hou6joeng4/mall-saas/actions/workflows/ci.yml)
